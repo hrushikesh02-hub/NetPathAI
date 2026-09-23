@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetPath AI - Complete Project Documentation</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm 15mm 20mm 15mm;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            color: #1e293b;
+            line-height: 1.6;
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 30px;
+            background-color: #ffffff;
+        }
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #ffffff;
+            padding: 24px 32px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        .header-bar h1 {
+            margin: 0;
+            font-size: 26px;
+            color: #38bdf8;
+            border-bottom: none;
+        }
+        .header-bar p {
+            margin: 6px 0 0 0;
+            color: #94a3b8;
+            font-size: 14px;
+        }
+        .print-btn {
+            background-color: #0284c7;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+            transition: all 0.2s;
+        }
+        .print-btn:hover {
+            background-color: #0369a1;
+            transform: translateY(-1px);
+        }
+        @media print {
+            .header-bar .print-btn { display: none; }
+            body { max-width: 100%; padding: 0; }
+            .page-break { page-break-before: always; }
+        }
+        h1 {
+            font-size: 26px;
+            color: #0f172a;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+            margin-top: 40px;
+        }
+        h2 {
+            font-size: 20px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 8px;
+            margin-top: 36px;
+            color: #0284c7;
+        }
+        h3 {
+            font-size: 16px;
+            margin-top: 24px;
+            color: #334155;
+        }
+        code, pre {
+            font-family: 'Fira Code', 'Cascadia Code', 'Courier New', Courier, monospace;
+        }
+        pre {
+            background-color: #0f172a;
+            color: #e2e8f0;
+            padding: 18px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        p code, li code {
+            background-color: #f1f5f9;
+            color: #0f172a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 88%;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 24px 0;
+            font-size: 13.5px;
+        }
+        th, td {
+            border: 1px solid #cbd5e1;
+            padding: 10px 14px;
+            text-align: left;
+        }
+        th {
+            background-color: #f8fafc;
+            color: #0f172a;
+            font-weight: 600;
+        }
+        tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+        blockquote {
+            border-left: 4px solid #0284c7;
+            background-color: #f0f9ff;
+            margin: 18px 0;
+            padding: 14px 18px;
+            color: #0369a1;
+            border-radius: 0 8px 8px 0;
+        }
+        ul, ol {
+            padding-left: 24px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header-bar">
+        <div>
+            <h1>NetPath AI Project Documentation</h1>
+            <p>Complete Student & Viva Presentation Guide</p>
+        </div>
+        <button class="print-btn" onclick="window.print()">🖨️ Print / Save as PDF</button>
+    </div>
+    <div id="content">
+        <h1>📘 NetPath AI: Comprehensive Project Understanding & Documentation Guide</h1>
+
+<blockquote><strong>Note for Student/Presenter:</strong> This document is generated after analyzing the actual codebase of <strong>NetPath AI</strong>. It contains all details required to understand, present, demonstrate, and answer questions about this project for college project reports, presentations (PPT), and viva examinations.</blockquote>
+
+<hr/>
+
+<h2>1. PROJECT OVERVIEW</h2>
+
+<ul>
+<li><strong>Project Name:</strong> NetPath AI: AI-Based Packet Journey Visualizer for Intelligent Network Analysis</li>
+<li><strong>One-Line Definition:</strong> An educational, interactive network simulation platform that animates 7-layer OSI / TCP-IP packet encapsulation, computes dynamic Dijkstra shortest paths, and analyzes network QoS telemetry using Machine Learning (Isolation Forest & Random Forest).</li>
+<li><strong>Problem the Project Solves:</strong> Computer Networking theory (OSI model, framing, IP routing, TCP handshakes, congestion control) is abstract and difficult for students to visualize. Traditional command-line tools like <code>traceroute</code> or complex packet capture tools like <code>Wireshark</code> do not visually animate step-by-step PDU header transformations across dynamic network topologies alongside real-time AI anomaly detection.</li>
+<li><strong>Why This Project is Needed:</strong> It bridges the gap between theoretical textbook concepts and practical network telemetry analysis by offering an interactive, visual, and AI-assisted sandbox environment.</li>
+<li><strong>Main Objective:</strong> To provide a visual, real-time web simulator for network packet encapsulation/decapsulation, dynamic pathfinding (Dijkstra algorithm), fault tolerance (router failover), and AI-driven QoS telemetry anomaly detection.</li>
+<li><strong>Target Users:</strong></li>
+</ul>
+<p>  1. Computer Science & Engineering Students studying Computer Networks.</p>
+<p>  2. Networking Instructors and Professors for classroom demonstrations.</p>
+<p>  3. Network Engineers & AI/ML Enthusiasts studying network anomaly detection algorithms.</p>
+<ul>
+<li><strong>Real-World Use Case:</strong> Simulating enterprise network topology behavior, analyzing packet drop points during network congestion or cable faults, visualizing route failover when a core router crashes, and diagnosing QoS bottlenecks using machine learning.</li>
+<li><strong>Key Features:</strong></li>
+</ul>
+<p>  1. <strong>Interactive Packet Simulator:</strong> Configure source/destination IP, MAC, ports, TTL, and protocol (TCP/UDP/HTTP/DNS/ICMP) to simulate end-to-end packet journeys.</p>
+<p>  2. <strong>Dynamic Dijkstra Shortest Path Router:</strong> Graph-based topology solver that recalculates optimal network paths upon node/link failure in real-time.</p>
+<p>  3. <strong>7-Layer OSI & 4-Layer TCP/IP Encapsulation Visualizer:</strong> Step-by-step breakdown of Data → Segment → Datagram → Frame → Bitstream signal transformations.</p>
+<p>  4. <strong>Wireshark-Style Protocol Inspector:</strong> Displays raw hexadecimal payload dumps, Ethernet headers, IPv4 header checksums, and TCP flag states.</p>
+<p>  5. <strong>Hybrid AI/ML Telemetry Engine:</strong> Uses Scikit-learn <strong>Isolation Forest</strong> (unsupervised anomaly detection) and <strong>Random Forest</strong> (health classification into <code>HEALTHY</code>, <code>WARNING</code>, <code>CRITICAL</code>) with natural language root-cause diagnostic advice.</p>
+<p>  6. <strong>7 Educational Scenarios:</strong> Presets for Normal HTTP Traffic, Packet Drops, Router Failover, Congestion Bottlenecks, UDP Video Streaming, High Latency Satellite, and TTL Expiration Loops.</p>
+<p>  7. <strong>SQLite Telemetry History & Printable Executive Reports:</strong> Persists simulation logs and generates printable PDF/audit diagnostic reports.</p>
+<ul>
+<li><strong>Main Advantages:</strong> Zero physical hardware setup required, runs completely in browser and lightweight local backend, combines algorithmic graph routing with machine learning, highly visual and interactive.</li>
+<li><strong>What Makes This Project Unique:</strong> Unlike static network diagrams, NetPath AI dynamically recalculates headers, re-executes Dijkstra pathfinding on hardware failures, simulates TCP fast retransmissions, and uses a trained ML model to explain root-cause network issues in simple English.</li>
+</ul>
+
+<hr/>
+
+<h2>2. PROJECT FUNCTIONALITY</h2>
+
+<h3>What the Application Does</h3>
+<p>NetPath AI takes packet parameters (IPs, Ports, Payload, Protocol, TTL) from the user, computes the optimal route through a virtual network topology using Dijkstra's algorithm, builds step-by-step OSI/TCP-IP layer headers, calculates QoS metrics (Latency, Packet Loss, Throughput, Retransmissions, Jitter), passes these telemetry metrics to an AI inference engine, and displays an animated visual journey along with Wireshark-style header details and diagnostic reports.</p>
+
+<h3>What Happens When the Application Starts</h3>
+<p>1. <strong>Backend (<code>app.py</code>):</strong></p>
+<p>   - Initializes Flask server on <code>http://127.0.0.1:5000</code>.</p>
+<p>   - Initializes SQLite database <code>netpath_ai.db</code> and creates <code>simulation_history</code> table if missing.</p>
+<p>   - Loads Scikit-learn models (<code>scaler.joblib</code>, <code>isolation_forest.joblib</code>, <code>health_classifier.joblib</code>). If missing, cleanly loads the Heuristic Fallback Engine.</p>
+<p>   - Builds the default graph topology (PC1, Laptop1, AP1, SW1, R1, R2, R3, SW2, Server1).</p>
+<p>2. <strong>Frontend (<code>main.jsx</code> / <code>App.jsx</code>):</strong></p>
+<p>   - Launches React single-page app on <code>http://localhost:3000</code>.</p>
+<p>   - Loads the top Navigation Bar and defaults to the <strong>Dashboard (<code>/</code>)</strong> view.</p>
+<p>   - Automatically queries <code>/api/health</code> and <code>/api/metrics</code> to fetch real-time server health and summary telemetry KPIs.</p>
+
+<h3>Complete Step-by-Step User Flow (Input → Processing → Output)</h3>
+
+<pre><code>[ User Input ]
+  │ User enters Source/Dest IP, Ports, Protocol, Payload in /simulator
+  ▼
+[ Frontend Validation &amp; API Call ]
+  │ React sends POST /api/packet/journey request to Flask Backend
+  ▼
+[ Backend Processing ]
+  │ 1. Validate IPv4/Port inputs
+  │ 2. Dijkstra Algorithm calculates optimal node path (PC1 -&gt; SW1 -&gt; R1 -&gt; R2 -&gt; SW2 -&gt; Server1)
+  │ 3. Encapsulation Engine generates L7-L1 headers &amp; Hex dumps
+  │ 4. Metrics Engine calculates Latency, Loss, Throughput, Retransmissions
+  │ 5. AI Engine (Isolation Forest &amp; Random Forest) evaluates telemetry features
+  │ 6. SQLite DB saves simulation record
+  ▼
+[ Response &amp; Output ]
+  │ Flask returns JSON with path, steps, headers, metrics, and AI diagnosis
+  ▼
+[ Visual Rendering ]
+  │ React animates packet traversing the Canvas topology, highlights OSI layers,
+  │ populates Wireshark packet breakdown, and renders AI Diagnostic Card.</code></pre>
+
+<hr/>
+
+<h2>3. HOW THE PROJECT WORKS</h2>
+
+<h3>Complete Working Architecture Flow</h3>
+
+<pre><code>+-------------------------------------------------------------------------+
+|                              USER BROWSER                               |
+|   React 19 SPA (Dashboard, Simulator, Topology, AI Analyzer, Details)   |
++-------------------------------------------------------------------------+
+                                    │
+                         HTTP REST API Requests
+                         (JSON via Axios / Fetch)
+                                    ▼
++-------------------------------------------------------------------------+
+|                           FLASK BACKEND SERVER                          |
+|                       (python app.py on Port 5000)                      |
+|                                                                         |
+|  +-------------------+  +-----------------------+  +-----------------+  |
+|  |  Routing Engine   |  | Encapsulation Engine  |  | Metrics Engine  |  |
+|  | (Dijkstra Graph)  |  | (OSI L7-L1 Header Gen)|  | (QoS Physics)   |  |
+|  +-------------------+  +-----------------------+  +-----------------+  |
+|                                   │                                     |
+|                                   ▼                                     |
+|  +-------------------------------------------------------------------+  |
+|  |                        AI Telemetry Analyzer                      |  |
+|  |   Primary: Isolation Forest &amp; Random Forest ML Models (.joblib)   |  |
+|  |   Secondary: Heuristic Network Rule-Based Fallback Engine         |  |
+|  +-------------------------------------------------------------------+  |
++-------------------------------------------------------------------------+
+                                    │
+                      SQL Queries (Insert / Select)
+                                    ▼
++-------------------------------------------------------------------------+
+|                        SQLITE3 DATABASE ENGINE                          |
+|                 (netpath_ai.db -&gt; simulation_history)                   |
++-------------------------------------------------------------------------+</code></pre>
+
+<hr/>
+
+<h2>4. TECHNOLOGY STACK</h2>
+
+<table><thead><tr><th>Technology</th><th>Purpose</th><th>Where Used</th></tr></thead><tbody><tr><td><strong>Python 3.10+</strong></td><td>Backend runtime environment</td><td>Entire <code>backend/</code> directory</td></tr><tr><td><strong>Flask 3.0+</strong></td><td>REST API Web Framework</td><td><code>backend/app.py</code>, <code>backend/routes/api_routes.py</code></td></tr><tr><td><strong>Flask-CORS</strong></td><td>Cross-Origin Resource Sharing handler</td><td><code>backend/app.py</code></td></tr><tr><td><strong>Scikit-learn 1.4+</strong></td><td>Machine Learning algorithms (Isolation Forest, Random Forest, StandardScaler)</td><td><code>backend/ai/analyzer.py</code>, <code>backend/ai/train_model.py</code></td></tr><tr><td><strong>Pandas & NumPy</strong></td><td>Synthetic dataset creation & array feature scaling</td><td><code>backend/ai/dataset.py</code></td></tr><tr><td><strong>Joblib</strong></td><td>Serialization and loading of trained <code>.joblib</code> ML models</td><td><code>backend/ai/analyzer.py</code>, <code>backend/models/</code></td></tr><tr><td><strong>SQLite3</strong></td><td>Embedded lightweight relational database storage</td><td><code>backend/database/db.py</code>, <code>netpath_ai.db</code></td></tr><tr><td><strong>Pytest 8.0+</strong></td><td>Automated testing framework for unit and integration tests</td><td><code>backend/tests/test_netpath.py</code></td></tr><tr><td><strong>React 19</strong></td><td>Frontend User Interface library</td><td>Entire <code>frontend/src/</code> component hierarchy</td></tr><tr><td><strong>Vite 6</strong></td><td>Frontend build tool & local dev server with proxy support</td><td><code>frontend/vite.config.js</code></td></tr><tr><td><strong>React Router DOM 7</strong></td><td>Client-side page navigation routing</td><td><code>frontend/src/App.jsx</code></td></tr><tr><td><strong>Tailwind CSS 3.4</strong></td><td>Utility-first styling & glassmorphism dark theme UI</td><td><code>frontend/src/index.css</code>, <code>frontend/tailwind.config.js</code></td></tr><tr><td><strong>Lucide React</strong></td><td>UI Icon set</td><td>Used across all page components</td></tr><tr><td><strong>Recharts</strong></td><td>Interactive charts for network QoS telemetry visualization</td><td><code>frontend/src/pages/NetworkMetrics.jsx</code>, <code>frontend/src/pages/AIAnalyzer.jsx</code></td></tr></tbody></table>
+
+<hr/>
+
+<h2>5. PROJECT ARCHITECTURE</h2>
+
+<h3>Component Architecture Breakdown</h3>
+<p>1. <strong>Frontend Architecture:</strong> Component-driven Single Page Application (SPA) built using React 19 and React Router 7. State management is handled locally per page and component using standard React <code>useState</code> and <code>useEffect</code> hooks, making API requests via <code>fetch</code> wrapped in <code>frontend/src/services/api.js</code>.</p>
+<p>2. <strong>Backend Architecture:</strong> Modular Flask REST API following standard Blueprint pattern (<code>/api</code>). Includes separate decoupled simulation subsystems: <code>NetworkTopology</code>, <code>EncapsulationEngine</code>, <code>PacketEngine</code>, <code>NetworkMetricsEngine</code>, and <code>NetworkAIAnalyzer</code>.</p>
+<p>3. <strong>Database Architecture:</strong> Embedded SQLite3 file <code>netpath_ai.db</code> managed via native <code>sqlite3</code> standard library with <code>sqlite3.Row</code> row factory for JSON dict conversion.</p>
+<p>4. <strong>API Architecture:</strong> Stateless RESTful HTTP endpoints returning standard structured JSON responses containing <code>success: bool</code>, data payloads, and explicit HTTP error status codes (<code>200</code>, <code>400</code>, <code>404</code>, <code>422</code>, <code>500</code>).</p>
+<p>5. <strong>AI/ML Architecture:</strong> Hybrid dual-mode inference engine:</p>
+<p>   - <strong>Mode A (Machine Learning):</strong> Standardized 8-feature vector scaling → <strong>Isolation Forest</strong> (Anomaly score & boolean flag) + <strong>Random Forest Classifier</strong> (<code>HEALTHY</code>, <code>WARNING</code>, <code>CRITICAL</code> probabilities).</p>
+<p>   - <strong>Mode B (Rule-Based Heuristic Fallback):</strong> Safe fallback rules evaluating threshold logic on loss, latency, retransmissions, throughput, and jitter if ML dependencies or <code>.joblib</code> files are unavailable.</p>
+<p>6. <strong>Authentication Architecture:</strong> <strong>None</strong> (Open educational simulation tool, single-tenant local operation).</p>
+
+<hr/>
+
+<h2>6. FOLDER & FILE STRUCTURE</h2>
+
+<pre><code>NetPathAI/
+├── backend/                        # Flask Backend Application
+│   ├── ai/                         # Machine Learning Subsystem
+│   │   ├── analyzer.py             # ML Inference &amp; Rule-Based Fallback Engine
+│   │   ├── dataset.py              # Synthetic telemetry generator (5,000 samples)
+│   │   └── train_model.py          # Model training pipeline script
+│   ├── database/                   # Data Layer
+│   │   └── db.py                   # SQLite schema, queries, metrics calculation
+│   ├── models/                     # Trained Machine Learning Artifacts
+│   │   ├── health_classifier.joblib# Trained Random Forest classifier model
+│   │   ├── isolation_forest.joblib # Trained Isolation Forest anomaly model
+│   │   └── scaler.joblib           # Feature standard scaler
+│   ├── routes/                     # API Layer
+│   │   └── api_routes.py           # Blueprint for all /api REST endpoints
+│   ├── simulation/                 # Simulation Subsystems
+│   │   ├── encapsulation.py        # 7-layer OSI &amp; 4-layer TCP/IP generator
+│   │   ├── metrics.py              # Network physics &amp; QoS telemetry engine
+│   │   ├── packet_engine.py        # End-to-end journey orchestrator
+│   │   ├── scenarios.py            # Preset educational scenario definitions
+│   │   └── topology.py             # Graph data structure &amp; Dijkstra algorithm
+│   ├── tests/                      # Automated Verification
+│   │   └── test_netpath.py         # 14 Pytest unit and integration tests
+│   ├── app.py                      # Flask server main entry point
+│   ├── netpath_ai.db               # SQLite database storage file
+│   └── requirements.txt            # Python dependencies
+├── frontend/                       # React Frontend Application
+│   ├── public/                     # Static public assets
+│   ├── src/                        # Source React files
+│   │   ├── components/             # Reusable UI Components
+│   │   │   ├── AIExplanationCard.jsx# AI Diagnosis &amp; Recommendation Card
+│   │   │   ├── LayerStackVisualizer.jsx# 7-Layer OSI &amp; 4-Layer TCP-IP stack
+│   │   │   ├── MetricCard.jsx       # Dashboard summary KPI tile
+│   │   │   ├── Navbar.jsx           # Top header navigation bar
+│   │   │   ├── PacketHeaderViewer.jsx# Wireshark-style protocol header inspector
+│   │   │   ├── PathTimeline.jsx     # Step-by-step trajectory timeline
+│   │   │   └── TopologyCanvas.jsx   # SVG/HTML canvas graph visualizer
+│   │   ├── pages/                  # 10 Main Application Views
+│   │   │   ├── AboutDocs.jsx        # Syllabus alignment &amp; Viva Q&amp;A guide
+│   │   │   ├── AIAnalyzer.jsx       # Interactive ML sandbox view
+│   │   │   ├── Dashboard.jsx        # Summary KPI dashboard
+│   │   │   ├── HistoryReports.jsx   # Audit logs &amp; printable report generator
+│   │   │   ├── LayerVisualizer.jsx  # PDU layer breakdown page
+│   │   │   ├── NetworkMetrics.jsx   # QoS time-series analytics charts
+│   │   │   ├── NetworkTopology.jsx  # Interactive topology graph &amp; router control
+│   │   │   ├── PacketDetails.jsx    # Raw Wireshark packet hex dump inspector
+│   │   │   ├── PacketSimulator.jsx  # Core simulation input &amp; animation page
+│   │   │   └── SimulationScenarios.jsx# 7 preset educational scenarios
+│   │   ├── services/
+│   │   │   └── api.js              # Fetch REST API client wrapper
+│   │   ├── utils/
+│   │   │   └── constants.js        # Syllabus topics &amp; default constant data
+│   │   ├── App.jsx                 # Main layout &amp; router entry point
+│   │   ├── index.css               # Tailwind CSS &amp; Glassmorphic dark styling
+│   │   └── main.jsx                # React DOM render entry point
+│   ├── package.json                # Frontend npm scripts &amp; dependencies
+│   ├── tailwind.config.js          # Tailwind CSS styling configuration
+│   └── vite.config.js              # Vite server &amp; /api backend proxy config
+└── README.md                      # Main project documentation</code></pre>
+
+<h3>Detailed File Analysis (Important Files)</h3>
+
+<p>1. <strong><code>backend/app.py</code></strong></p>
+<p>   - <strong>Purpose:</strong> Main entry point for Flask server.</p>
+<p>   - <strong>What it does:</strong> Configures CORS, initializes SQLite DB tables, loads REST blueprint, handles 404/500 errors, starts server on port 5000.</p>
+<p>   - <strong>Connected to:</strong> <code>routes/api_routes.py</code>, <code>database/db.py</code>.</p>
+
+<p>2. <strong><code>backend/routes/api_routes.py</code></strong></p>
+<p>   - <strong>Purpose:</strong> API controller exposing REST endpoints.</p>
+<p>   - <strong>What it does:</strong> Maps routes (<code>/api/packet/journey</code>, <code>/api/topology</code>, <code>/api/ai/analyze</code>, <code>/api/history</code>, <code>/api/scenarios</code>) to internal engine functions.</p>
+<p>   - <strong>Connected to:</strong> All engines in <code>backend/simulation/</code>, <code>backend/ai/</code>, and <code>backend/database/</code>.</p>
+
+<p>3. <strong><code>backend/simulation/topology.py</code></strong></p>
+<p>   - <strong>Purpose:</strong> Graph topology representation & Dijkstra pathfinding engine.</p>
+<p>   - <strong>What it does:</strong> Stores nodes (PC, Switch, Router, Server) and links, calculates shortest path using a min-heap priority queue ($O((V+E)\log V)$), and supports node disabling (router failure).</p>
+<p>   - <strong>Connected to:</strong> <code>backend/simulation/packet_engine.py</code>.</p>
+
+<p>4. <strong><code>backend/simulation/encapsulation.py</code></strong></p>
+<p>   - <strong>Purpose:</strong> Protocol Data Unit (PDU) encapsulation/decapsulation builder.</p>
+<p>   - <strong>What it does:</strong> Generates L7 Application payload, L4 TCP/UDP ports/flags/checksum, L3 IPv4 headers/TTL/One's complement header checksum, L2 Ethernet MAC frames/CRC-32 FCS, and L1 digital bitstream hex representation.</p>
+<p>   - <strong>Connected to:</strong> <code>backend/simulation/packet_engine.py</code>.</p>
+
+<p>5. <strong><code>backend/ai/analyzer.py</code></strong></p>
+<p>   - <strong>Purpose:</strong> Telemetry analysis & natural language diagnosis engine.</p>
+<p>   - <strong>What it does:</strong> Runs scaled feature vectors through Isolation Forest and Random Forest ML models. If models are absent, executes a fallback heuristic rule engine. Formulates natural language explanations.</p>
+<p>   - <strong>Connected to:</strong> <code>backend/models/</code>, <code>backend/routes/api_routes.py</code>.</p>
+
+<p>6. <strong><code>backend/database/db.py</code></strong></p>
+<p>   - <strong>Purpose:</strong> SQLite database persistence layer.</p>
+<p>   - <strong>What it does:</strong> Saves simulation records, fetches audit logs, clears history, and calculates aggregate metrics for the dashboard.</p>
+<p>   - <strong>Connected to:</strong> <code>netpath_ai.db</code>.</p>
+
+<p>7. <strong><code>frontend/src/pages/PacketSimulator.jsx</code></strong></p>
+<p>   - <strong>Purpose:</strong> Main simulation page.</p>
+<p>   - <strong>What it does:</strong> Renders form controls to build custom packets, initiates journey execution, animates node traversal, displays step-by-step progress, and shows AI diagnosis.</p>
+<p>   - <strong>Connected to:</strong> <code>frontend/src/services/api.js</code>.</p>
+
+<p>8. <strong><code>frontend/src/pages/AIAnalyzer.jsx</code></strong></p>
+<p>   - <strong>Purpose:</strong> Interactive AI telemetry sandbox view.</p>
+<p>   - <strong>What it does:</strong> Provides interactive range sliders for Latency, Loss, Throughput, Retransmissions, Jitter, Hops, TTL, and size to test ML inference live in real time.</p>
+<p>   - <strong>Connected to:</strong> <code>POST /api/ai/analyze</code>.</p>
+
+<hr/>
+
+<h2>7. USER ROLES</h2>
+
+<ul>
+<li><strong>Role Implementation Status:</strong> <strong>Single-Role System (No Authentication / Multi-Tenancy)</strong>.</li>
+<li><strong>Explanation:</strong> NetPath AI is built as an open educational laboratory simulator. All users accessing the application have full administrative and operational access to simulate packets, toggle node status, run scenarios, test AI models, and manage simulation history logs.</li>
+</ul>
+
+<hr/>
+
+<h2>8. COMPLETE USER WORKFLOW</h2>
+
+<pre><code>Launch Application (http://localhost:3000)
+       │
+       ▼
+Dashboard View (View System Health, Total Packets, Avg Latency, Network Health Badge)
+       │
+       ├──► 1. Open Packet Simulator (/simulator)
+       │       - Adjust Source/Dest IP, Ports, Payload, Protocol
+       │       - Click &quot;GENERATE &amp; SIMULATE PACKET&quot;
+       │       - View dynamic Dijkstra trajectory animation on network canvas
+       │       - Inspect 7-Layer OSI encapsulation stack and AI Telemetry Card
+       │
+       ├──► 2. Open Network Topology (/topology)
+       │       - View full node &amp; link layout (PC1, Laptop1, AP1, SW1, R1, R2, R3, SW2, Server1)
+       │       - Click &quot;FAIL ROUTER R2&quot; button to disable core router
+       │       - Observe dynamic recalculation of Dijkstra path via backup Router R3
+       │
+       ├──► 3. Open AI Analyzer (/ai-analyzer)
+       │       - Drag Latency, Packet Loss, and Retransmission sliders
+       │       - Observe live ML classification update (HEALTHY / WARNING / CRITICAL)
+       │       - Review natural language root-cause cause &amp; engineering recommendation
+       │
+       ├──► 4. Open Wireshark Packet Inspector (/packet-details)
+       │       - View raw Ethernet, IPv4, TCP/UDP headers and hex dumps
+       │
+       ├──► 5. Run Educational Scenarios (/scenarios)
+       │       - Select pre-configured scenario (e.g. TTL Expiration, Packet Loss, Failover)
+       │       - Click &quot;RUN SCENARIO&quot; to observe preset network anomalies
+       │
+       └──► 6. View History &amp; Reports (/history)
+               - Inspect chronological SQLite simulation log table
+               - Click &quot;EXPORT / PRINT REPORT&quot; to print executive report</code></pre>
+
+<hr/>
+
+<h2>9. FEATURE-BY-FEATURE EXPLANATION</h2>
+
+<h3>1. Dynamic Packet Simulator & Trajectory Animator</h3>
+<p>1. <strong>Purpose:</strong> To visualize end-to-end packet transmission across an enterprise network.</p>
+<p>2. <strong>Who Uses It:</strong> Students & instructors.</p>
+<p>3. <strong>Input:</strong> Source IP, Destination IP, Source Port, Destination Port, Payload, Packet Size, Protocol (TCP/UDP), TTL.</p>
+<p>4. <strong>Processing:</strong></p>
+<p>   - Input validation (Regex check for IPv4, Port bounds).</p>
+<p>   - Dijkstra shortest path solver calculates sequence of network nodes.</p>
+<p>   - Encapsulation engine builds header parameters.</p>
+<p>   - Trajectory steps generated for UI state updates.</p>
+<p>5. <strong>Backend/API Involved:</strong> <code>POST /api/packet/journey</code>.</p>
+<p>6. <strong>Database Involved:</strong> Saves simulation output to <code>simulation_history</code> in <code>netpath_ai.db</code>.</p>
+<p>7. <strong>Output:</strong> Complete trajectory JSON with metrics, path array, encapsulation steps, and AI analysis.</p>
+<p>8. <strong>What the User Sees:</strong> Animated packet moving along nodes on an SVG canvas, step-by-step OSI layer stack, and summary metrics.</p>
+<p>9. <strong>Real-World Importance:</strong> Explains how packets transition across real network hardware.</p>
+<p>10. <strong>Limitations:</strong> Animation speed is fixed to simulated intervals; does not capture physical layer electromagnetic interference directly.</p>
+
+<h3>2. Graph Topology & Link-State Router Failover Engine</h3>
+<p>1. <strong>Purpose:</strong> To demonstrate dynamic routing and fault tolerance using Dijkstra's algorithm.</p>
+<p>2. <strong>Who Uses It:</strong> Network engineering students.</p>
+<p>3. <strong>Input:</strong> Node failure toggle (e.g., set Router R2 status to offline).</p>
+<p>4. <strong>Processing:</strong> Node status updated in <code>NetworkTopology</code> instance. <code>heapq</code>-based Dijkstra algorithm re-executes to recalculate shortest weighted path avoiding offline nodes.</p>
+<p>5. <strong>Backend/API Involved:</strong> <code>GET /api/topology</code>, <code>POST /api/topology/failure</code>.</p>
+<p>6. <strong>Database Involved:</strong> None (in-memory topology graph state).</p>
+<p>7. <strong>Output:</strong> Recalculated path node array (e.g., rerouted from <code>R1 -> R2 -> SW2</code> to <code>R1 -> R3 -> SW2</code>).</p>
+<p>8. <strong>What the User Sees:</strong> Node color turns red (offline), and green path line shifts to backup router R3.</p>
+<p>9. <strong>Real-World Importance:</strong> Demonstrates routing protocol behavior (OSPF/IS-IS link-state rerouting during link outages).</p>
+<p>10. <strong>Limitations:</strong> Pre-defined node topology (9 nodes); graph addition of custom nodes is not exposed in UI.</p>
+
+<h3>3. Hybrid AI Telemetry & Anomaly Diagnostics Engine</h3>
+<p>1. <strong>Purpose:</strong> To detect telemetry anomalies and classify network health using Machine Learning.</p>
+<p>2. <strong>Who Uses It:</strong> Students studying AI applications in networking.</p>
+<p>3. <strong>Input:</strong> 8 telemetry features: <code>[packet_size, latency, packet_loss, throughput, retransmissions, hops, ttl, jitter]</code>.</p>
+<p>4. <strong>Processing:</strong> Standardized feature vector → Isolation Forest prediction (-1 for anomaly) → Random Forest classifier (<code>HEALTHY</code>, <code>WARNING</code>, <code>CRITICAL</code>) → Heuristic explanation generator.</p>
+<p>5. <strong>Backend/API Involved:</strong> <code>POST /api/ai/analyze</code>.</p>
+<p>6. <strong>Database Involved:</strong> None for sandbox analysis; stored during packet simulation runs.</p>
+<p>7. <strong>Output:</strong> JSON containing <code>is_anomaly</code>, <code>health_status</code>, <code>risk_level</code>, <code>confidence</code>, <code>reason</code>, <code>recommendation</code>.</p>
+<p>8. <strong>What the User Sees:</strong> Real-time ML diagnostic card, risk gauge badge, feature weight distribution chart, and English recommendations.</p>
+<p>9. <strong>Real-World Importance:</strong> Automated AIOps (Artificial Intelligence for IT Operations) and automated network root-cause diagnosis.</p>
+<p>10. <strong>Limitations:</strong> Trained on 5,000 synthetic dataset samples generated by <code>ai/dataset.py</code>.</p>
+
+<h3>4. 7-Layer OSI & 4-Layer TCP/IP Encapsulation Visualizer</h3>
+<p>1. <strong>Purpose:</strong> To show how data payloads are wrapped with headers at each protocol layer.</p>
+<p>2. <strong>Who Uses It:</strong> Students studying fundamental OSI 7-layer model.</p>
+<p>3. <strong>Input:</strong> Packet payload and application protocol.</p>
+<p>4. <strong>Processing:</strong> Generates application header (L7), TCP/UDP segment headers (L4), IPv4 datagram headers & One's complement checksum (L3), Ethernet MAC frame & CRC-32 FCS (L2), and binary bit stream (L1).</p>
+<p>5. <strong>Backend/API Involved:</strong> <code>POST /api/packet/create</code>.</p>
+<p>6. <strong>Database Involved:</strong> None.</p>
+<p>7. <strong>Output:</strong> Structured layer stack representation.</p>
+<p>8. <strong>What the User Sees:</strong> Interactive vertical stack showing encapsulated headers at each layer.</p>
+<p>9. <strong>Real-World Importance:</strong> Essential core topic for Computer Networks exams and technical interviews.</p>
+<p>10. <strong>Limitations:</strong> Visual simulation of protocol headers rather than raw binary socket stream.</p>
+
+<h3>5. Wireshark-Style Protocol Inspector</h3>
+<p>1. <strong>Purpose:</strong> To inspect raw packet headers and hexadecimal memory representation.</p>
+<p>2. <strong>Who Uses It:</strong> Students practicing packet analysis.</p>
+<p>3. <strong>Input:</strong> Simulation record details.</p>
+<p>4. <strong>Processing:</strong> Hex dump conversion of packet payload and formatted fields.</p>
+<p>5. <strong>Backend/API Involved:</strong> Built from simulation output JSON.</p>
+<p>6. <strong>Database Involved:</strong> Reads history from <code>netpath_ai.db</code>.</p>
+<p>7. <strong>Output:</strong> Protocol field tree view and 16-byte hex grid with ASCII representation.</p>
+<p>8. <strong>What the User Sees:</strong> Dark-themed Wireshark packet detail panel.</p>
+<p>9. <strong>Real-World Importance:</strong> Familiarizes students with industry-standard diagnostic tools.</p>
+<p>10. <strong>Limitations:</strong> Inspector displays simulated protocol fields rather than parsing live <code>.pcap</code> files.</p>
+
+<h3>6. Preset Educational Scenarios</h3>
+<p>1. <strong>Purpose:</strong> To provide instant 1-click demonstrations of key network phenomena.</p>
+<p>2. <strong>Who Uses It:</strong> Instructors presenting in lectures.</p>
+<p>3. <strong>Input:</strong> Scenario selection (e.g. <em>TTL Expiration Loop</em>, <em>Severe Packet Loss</em>, <em>Core Router Failure</em>).</p>
+<p>4. <strong>Processing:</strong> Loads preset parameters and scenario flags, runs packet journey, returns full results.</p>
+<p>5. <strong>Backend/API Involved:</strong> <code>GET /api/scenarios</code>, <code>POST /api/scenario/run</code>.</p>
+<p>6. <strong>Database Involved:</strong> Saves run result to <code>simulation_history</code>.</p>
+<p>7. <strong>Output:</strong> Scenario execution result and visual rendering.</p>
+<p>8. <strong>What the User Sees:</strong> Dedicated scenario selection cards with 1-click "Run Experiment" buttons.</p>
+<p>9. <strong>Real-World Importance:</strong> Accelerates classroom demonstrations.</p>
+<p>10. <strong>Limitations:</strong> Fixed set of 7 pre-configured scenarios.</p>
+
+<h3>7. SQLite Telemetry History & Printable Executive Report Generator</h3>
+<p>1. <strong>Purpose:</strong> To log historical simulation telemetry and generate print-ready diagnostic reports.</p>
+<p>2. <strong>Who Uses It:</strong> Students submitting lab assignments and project documentation.</p>
+<p>3. <strong>Input:</strong> Filter queries, search terms, report export action.</p>
+<p>4. <strong>Processing:</strong> SQLite queries (<code>SELECT</code>, <code>DELETE</code>), browser print styling <code>@media print</code>.</p>
+<p>5. <strong>Backend/API Involved:</strong> <code>GET /api/history</code>, <code>DELETE /api/history/<id></code>, <code>POST /api/history/clear</code>.</p>
+<p>6. <strong>Database Involved:</strong> <code>netpath_ai.db</code> (<code>simulation_history</code> table).</p>
+<p>7. <strong>Output:</strong> Filtered history table and printable executive PDF view.</p>
+<p>8. <strong>What the User Sees:</strong> Data table with search/delete actions and clean printable report modal.</p>
+<p>9. <strong>Real-World Importance:</strong> Provides audit trail capabilities for network incident reports.</p>
+<p>10. <strong>Limitations:</strong> Browser-native print-to-PDF rendering rather than server-side PDF library generator.</p>
+
+<hr/>
+
+<h2>10. DATABASE</h2>
+
+<ul>
+<li><strong>Database Engine:</strong> SQLite 3 (Embedded relational database)</li>
+<li><strong>File Location:</strong> <code>backend/netpath_ai.db</code></li>
+</ul>
+
+<h3>Table Schema: `simulation_history`</h3>
+
+<table><thead><tr><th>Field Name</th><th>Data Type</th><th>Constraints</th><th>Description</th></tr></thead><tbody><tr><td><code>id</code></td><td>INTEGER</td><td>PRIMARY KEY AUTOINCREMENT</td><td>Unique record ID</td></tr><tr><td><code>packet_id</code></td><td>TEXT</td><td>UNIQUE NOT NULL</td><td>Generated packet ID (e.g. <code>PKT-A1B2C3</code>)</td></tr><tr><td><code>source_ip</code></td><td>TEXT</td><td>NOT NULL</td><td>Source IPv4 address</td></tr><tr><td><code>destination_ip</code></td><td>TEXT</td><td>NOT NULL</td><td>Destination IPv4 address</td></tr><tr><td><code>protocol</code></td><td>TEXT</td><td>NOT NULL</td><td>Transport protocol (<code>TCP</code> / <code>UDP</code>)</td></tr><tr><td><code>app_protocol</code></td><td>TEXT</td><td>NULLABLE</td><td>Application protocol (<code>HTTP</code>, <code>DNS</code>, etc.)</td></tr><tr><td><code>payload</code></td><td>TEXT</td><td>NULLABLE</td><td>Text payload message</td></tr><tr><td><code>packet_size</code></td><td>INTEGER</td><td>NULLABLE</td><td>Size in bytes</td></tr><tr><td><code>latency</code></td><td>REAL</td><td>NULLABLE</td><td>Simulated round-trip time (ms)</td></tr><tr><td><code>packet_loss</code></td><td>REAL</td><td>NULLABLE</td><td>Simulated packet loss percentage</td></tr><tr><td><code>throughput</code></td><td>REAL</td><td>NULLABLE</td><td>Measured bandwidth throughput (Mbps)</td></tr><tr><td><code>retransmissions</code></td><td>INTEGER</td><td>NULLABLE</td><td>Number of TCP retransmit cycles</td></tr><tr><td><code>hops</code></td><td>INTEGER</td><td>NULLABLE</td><td>Total routing hop count</td></tr><tr><td><code>ttl</code></td><td>INTEGER</td><td>NULLABLE</td><td>Time To Live header value</td></tr><tr><td><code>jitter</code></td><td>REAL</td><td>NULLABLE</td><td>Latency variation (ms)</td></tr><tr><td><code>status</code></td><td>TEXT</td><td>NULLABLE</td><td>Delivery status (<code>DELIVERED</code>, <code>DROPPED</code>)</td></tr><tr><td><code>ai_status</code></td><td>TEXT</td><td>NULLABLE</td><td>Anomaly flag (<code>normal</code> / <code>anomaly</code>)</td></tr><tr><td><code>ai_health</code></td><td>TEXT</td><td>NULLABLE</td><td>Classification (<code>HEALTHY</code>, <code>WARNING</code>, <code>CRITICAL</code>)</td></tr><tr><td><code>ai_risk</code></td><td>TEXT</td><td>NULLABLE</td><td>Risk evaluation (<code>low</code>, <code>moderate</code>, <code>high</code>, <code>critical</code>)</td></tr><tr><td><code>ai_confidence</code></td><td>REAL</td><td>NULLABLE</td><td>ML prediction confidence (0.0 to 1.0)</td></tr><tr><td><code>ai_reason</code></td><td>TEXT</td><td>NULLABLE</td><td>Natural language root-cause diagnosis</td></tr><tr><td><code>ai_recommendation</code></td><td>TEXT</td><td>NULLABLE</td><td>Engineering recommendation</td></tr><tr><td><code>path_taken</code></td><td>TEXT</td><td>NULLABLE</td><td>Node traversal string (e.g. <code>PC1 -> SW1 -> R1 -> R2 -> SW2 -> Server1</code>)</td></tr><tr><td><code>timestamp</code></td><td>DATETIME</td><td>DEFAULT CURRENT_TIMESTAMP</td><td>Record creation timestamp</td></tr></tbody></table>
+
+<ul>
+<li><strong>Data Lifetime:</strong></li>
+</ul>
+<p>  - <strong>Created:</strong> Automatically when a simulation or scenario is executed.</p>
+<p>  - <strong>Updated:</strong> Replaced if <code>packet_id</code> collides (<code>INSERT OR REPLACE</code>).</p>
+<p>  - <strong>Deleted:</strong> Single record deletion via <code>DELETE /api/history/<id></code> or bulk wipe via <code>POST /api/history/clear</code>.</p>
+
+<hr/>
+
+<h2>11. API DOCUMENTATION</h2>
+
+<table><thead><tr><th>Method</th><th>Endpoint</th><th>Purpose</th><th>Auth</th><th>Input</th><th>Output</th></tr></thead><tbody><tr><td><code>GET</code></td><td><code>/api/health</code></td><td>Check backend & ML service status</td><td>None</td><td>None</td><td><code>{ status: "healthy", ml_model_active: bool, ... }</code></td></tr><tr><td><code>GET</code></td><td><code>/api/topology</code></td><td>Fetch complete graph topology</td><td>None</td><td>None</td><td><code>{ success: true, topology: { nodes, links } }</code></td></tr><tr><td><code>POST</code></td><td><code>/api/topology/failure</code></td><td>Toggle node active/offline status</td><td>None</td><td><code>{ node_id: "R2", is_active: false }</code></td><td><code>{ success: true, new_status: "offline", recalculated_path: {...} }</code></td></tr><tr><td><code>POST</code></td><td><code>/api/packet/create</code></td><td>Validate fields & build encapsulation</td><td>None</td><td>Packet parameters JSON</td><td><code>{ success: true, packet_data: {...}, encapsulation: {...} }</code></td></tr><tr><td><code>POST</code></td><td><code>/api/packet/journey</code></td><td>Execute full journey simulation</td><td>None</td><td>Packet parameters & scenario flags</td><td><code>{ success: true, simulation: {...}, ai_analysis: {...} }</code></td></tr><tr><td><code>POST</code></td><td><code>/api/ai/analyze</code></td><td>Run ML inference on telemetry</td><td>None</td><td>Telemetry feature dict</td><td><code>{ success: true, analysis: { health_status, risk_level, reason, ... } }</code></td></tr><tr><td><code>GET</code></td><td><code>/api/metrics</code></td><td>Fetch dashboard KPI summary</td><td>None</td><td>None</td><td><code>{ success: true, summary: { total_packets, avg_latency, network_health, ... } }</code></td></tr><tr><td><code>GET</code></td><td><code>/api/scenarios</code></td><td>List preset educational scenarios</td><td>None</td><td>None</td><td><code>{ success: true, scenarios: [...] }</code></td></tr><tr><td><code>POST</code></td><td><code>/api/scenario/run</code></td><td>Execute preset scenario by ID</td><td>None</td><td><code>{ scenario_id: "ROUTER_FAILURE" }</code></td><td><code>{ success: true, simulation: {...}, ai_analysis: {...} }</code></td></tr><tr><td><code>GET</code></td><td><code>/api/history</code></td><td>Fetch simulation history logs</td><td>None</td><td>Query params <code>limit</code>, <code>offset</code></td><td><code>{ success: true, count: int, history: [...] }</code></td></tr><tr><td><code>GET</code></td><td><code>/api/history/<id></code></td><td>Fetch single simulation record</td><td>None</td><td>Path param <code>record_id</code></td><td><code>{ success: true, record: {...} }</code></td></tr><tr><td><code>DELETE</code></td><td><code>/api/history/<id></code></td><td>Delete single history record</td><td>None</td><td>Path param <code>record_id</code></td><td><code>{ success: true }</code></td></tr><tr><td><code>POST</code></td><td><code>/api/history/clear</code></td><td>Wipe all history records</td><td>None</td><td>None</td><td><code>{ success: true, message: "History cleared." }</code></td></tr></tbody></table>
+
+<hr/>
+
+<h2>12. AUTHENTICATION & SECURITY</h2>
+
+<ul>
+<li><strong>Current Implementation:</strong></li>
+</ul>
+<p>  - <strong>Authentication:</strong> None (Designed for local educational laboratory sandbox execution).</p>
+<p>  - <strong>Authorization:</strong> None (All endpoints public).</p>
+<p>  - <strong>Input Validation:</strong> Rigorous backend regex validation on IPv4 addresses (<code>IP_REGEX</code>), numeric port boundaries (<code>1–65535</code>), packet sizes (<code>64–9000 bytes</code>), and TTL range (<code>1–255</code>) implemented in <code>PacketEngine.validate_packet_input()</code>.</p>
+<p>  - <strong>SQL Injection Prevention:</strong> Parameterized SQL queries (<code>?</code> placeholders) used across all SQLite database operations in <code>backend/database/db.py</code>.</p>
+<p>  - <strong>CORS Security:</strong> Flask-CORS enabled globally for API endpoints.</p>
+
+<ul>
+<li><strong>Future Security Improvements:</strong></li>
+</ul>
+<p>  - Implement JWT (JSON Web Tokens) or session-based user authentication.</p>
+<p>  - Add Role-Based Access Control (RBAC) separating Student and Instructor roles.</p>
+<p>  - Implement API rate-limiting using Flask-Limiter to prevent request flooding.</p>
+
+<hr/>
+
+<h2>13. AI/ML EXPLANATION</h2>
+
+<h3>Why AI/ML is Used</h3>
+<p>In real-world networks, identifying network anomalies (such as bufferbloat, link degradation, asymmetric duplex mismatch, or micro-burst congestion) from raw 8-dimensional telemetry metrics is difficult using simple fixed thresholds. Unsupervised Machine Learning isolates statistical anomalies, while ensemble classification predicts overall network health status.</p>
+
+<h3>Machine Learning Architecture</h3>
+<p>1. <strong>Model 1: Isolation Forest (Unsupervised Anomaly Detection)</strong></p>
+<p>   - <strong>Algorithm:</strong> <code>sklearn.ensemble.IsolationForest</code></p>
+<p>   - <strong>Purpose:</strong> Identifies telemetry outliers by calculating average tree path isolation depth $h(x)$. Anomaly score is computed from decision function.</p>
+<p>2. <strong>Model 2: Random Forest Classifier (Supervised Health State Classifier)</strong></p>
+<p>   - <strong>Algorithm:</strong> <code>sklearn.ensemble.RandomForestClassifier</code></p>
+<p>   - <strong>Purpose:</strong> Predicts multi-class health state (<code>HEALTHY</code>, <code>WARNING</code>, <code>CRITICAL</code>) and returns class probabilities.</p>
+<p>3. <strong>Model 3: StandardScaler</strong></p>
+<p>   - <strong>Algorithm:</strong> <code>sklearn.preprocessing.StandardScaler</code></p>
+<p>   - <strong>Purpose:</strong> Standardizes 8 telemetry features to zero mean and unit variance.</p>
+
+<h3>8 Telemetry Features Evaluated</h3>
+<p>$$\vec{x} = [\text{packet\_size}, \text{latency}, \text{packet\_loss}, \text{throughput}, \text{retransmissions}, \text{hops}, \text{ttl}, \text{jitter}]$$</p>
+
+<h3>Natural Language Diagnostic Generator</h3>
+<p>After predictions are generated, <code>NetworkAIAnalyzer.generate_explanation()</code> evaluates domain-specific engineering rules to construct English root-cause diagnosis statements and actionable recommendations (e.g. recommending Active Queue Management CoDel, checking TCP MSS/MTU negotiation, or auditing OSPF cost metrics).</p>
+
+<h3>Complete AI Inference Flow Example</h3>
+
+<pre><code>Incoming Telemetry Metrics:
+{ latency: 280ms, packet_loss: 18.5%, throughput: 28Mbps, retransmissions: 5, hops: 4 }
+                           │
+                           ▼
+StandardScaler normalizes features to Z-scores
+                           │
+                           ▼
+Isolation Forest returns score (-0.18) -&gt; Flagged as ANOMALY (Confidence: 91%)
+                           │
+                           ▼
+Random Forest Classifier predicts state -&gt; CRITICAL (Probabilities: [0.05, 0.15, 0.80])
+                           │
+                           ▼
+Diagnostic Generator synthesizes explanation:
+&quot;Reason: Severe packet drop rate detected (18.5%) exceeding SLA threshold. Elevated latency (280ms).
+ Possible Cause: Interface queue buffer overflow or physical link noise.
+ Recommendation: Inspect switch interface queue depth and verify CRC error counters.&quot;</code></pre>
+
+<hr/>
+
+<h2>14. EXTERNAL APIs & SERVICES</h2>
+
+<ul>
+<li><strong>External APIs Used:</strong> <strong>None</strong>.</li>
+<li><strong>Explanation:</strong> NetPath AI is 100% self-contained and operates entirely offline without external third-party web services, cloud APIs, or external SaaS dependencies. All simulations, path calculations, machine learning inferences, and database operations run locally on the user's system.</li>
+</ul>
+
+<hr/>
+
+<h2>15. RUNNING THE PROJECT</h2>
+
+<h3>Prerequisites</h3>
+<ul>
+<li><strong>Python 3.10+</strong> (with <code>pip</code>)</li>
+<li><strong>Node.js 18+</strong> (with <code>npm</code>)</li>
+</ul>
+
+<h3>Installation & Execution Commands</h3>
+
+<h4>1. Backend Server Setup</h4>
+<pre><code># Navigate to backend directory
+cd backend
+
+# Create Python virtual environment
+python -m venv venv
+
+# Activate Virtual Environment (Windows PowerShell)
+.\venv\Scripts\Activate.ps1
+# (For Linux/macOS use: source venv/bin/activate)
+
+# Install Python dependencies
+pip install -r requirements.txt
+
+# Start Flask Backend Server
+python app.py</code></pre>
+<p><em>Backend URL:</em> <strong><code>http://127.0.0.1:5000</code></strong></p>
+
+<h4>2. Frontend Application Setup</h4>
+<p>Open a second terminal window:</p>
+<pre><code># Navigate to frontend directory
+cd frontend
+
+# Install Node modules
+npm install
+
+# Start Vite Development Server
+npm run dev</code></pre>
+<p><em>Frontend URL:</em> <strong><code>http://localhost:3000</code></strong></p>
+
+<hr/>
+
+<h2>16. HOW TO OPERATE / DEMO THE PROJECT</h2>
+
+<h3>Live Presentation & Demonstration Script</h3>
+
+<ul>
+<li><strong>Step 1 → Open Application Dashboard (<code>/</code>):</strong></li>
+</ul>
+<p>  - Point out the <strong>"Engine Online"</strong> and <strong>"Isolation Forest ML Active"</strong> health badges.</p>
+<p>  - Highlight the KPI cards (Total Packets, Average Latency, Network Health).</p>
+<p>  - <em>Internal Action:</em> React fetched system state via <code>GET /api/health</code> and <code>GET /api/metrics</code>.</p>
+
+<ul>
+<li><strong>Step 2 → Open Packet Simulator (<code>/simulator</code>):</strong></li>
+</ul>
+<p>  - Keep default settings (Source IP <code>192.168.1.10</code>, Dest IP <code>192.168.2.20</code>, HTTP protocol).</p>
+<p>  - Click <strong>"GENERATE & SIMULATE PACKET"</strong>.</p>
+<p>  - <em>Internal Action:</em> Backend executes Dijkstra pathfinding (<code>PC1 -> SW1 -> R1 -> R2 -> SW2 -> Server1</code>), calculates telemetry physics, runs AI inference, and saves the run to SQLite.</p>
+
+<ul>
+<li><strong>Step 3 → Explain Topology Canvas Traversal:</strong></li>
+</ul>
+<p>  - Watch the packet step visually across nodes on the canvas.</p>
+<p>  - Explain how the graph solver identified Core Router R2 as the primary least-cost path.</p>
+
+<ul>
+<li><strong>Step 4 → Inspect Layer Stack Visualizer:</strong></li>
+</ul>
+<p>  - Click the <strong>"OSI / TCP-IP Layer Stack"</strong> tab.</p>
+<p>  - Demonstrate descending encapsulation (Data → Segment → Datagram → Frame → Bitstream).</p>
+
+<ul>
+<li><strong>Step 5 → Demonstrate Core Router Hardware Failure (<code>/topology</code>):</strong></li>
+</ul>
+<p>  - Navigate to <strong>"Network Topology"</strong>.</p>
+<p>  - Click <strong>"FAIL ROUTER R2"</strong> to simulate a core router crash.</p>
+<p>  - Observe how the green active path line reroutes to <strong>backup Router R3</strong>.</p>
+<p>  - <em>Internal Action:</em> Dijkstra graph solver updated adjacency matrix excluding disabled node <code>R2</code> and recalculated optimal path via <code>R3</code>.</p>
+
+<ul>
+<li><strong>Step 6 → Demonstrate Interactive AI Telemetry Sandbox (<code>/ai-analyzer</code>):</strong></li>
+</ul>
+<p>  - Navigate to <strong>"AI Analyzer"</strong>.</p>
+<p>  - Drag the <strong>Packet Loss slider to 22%</strong> and <strong>Latency slider to 310 ms</strong>.</p>
+<p>  - Show how the ML badge updates live to <strong><code>CRITICAL</code></strong> with a red risk gauge.</p>
+<p>  - Read the natural language AI diagnosis and recommendation generated by the engine.</p>
+
+<ul>
+<li><strong>Step 7 → View Wireshark Packet Breakdown (<code>/packet-details</code>):</strong></li>
+</ul>
+<p>  - Navigate to <strong>"Packet Details"</strong>.</p>
+<p>  - Show Ethernet MAC addresses, IPv4 header checksums, TCP ports, and raw hexadecimal payload dumps.</p>
+
+<ul>
+<li><strong>Step 8 → Execute Educational Scenario (<code>/scenarios</code>):</strong></li>
+</ul>
+<p>  - Navigate to <strong>"Scenarios"</strong>.</p>
+<p>  - Click <strong>"RUN SCENARIO"</strong> on <em>TTL Expiration Loop</em>.</p>
+<p>  - Show packet drop when TTL reaches 0 and explanation of ICMP Time Exceeded message.</p>
+
+<ul>
+<li><strong>Step 9 → View Audit Logs & Print Executive Report (<code>/history</code>):</strong></li>
+</ul>
+<p>  - Navigate to <strong>"History & Reports"</strong>.</p>
+<p>  - Show chronological SQLite log table.</p>
+<p>  - Click <strong>"EXPORT / PRINT REPORT"</strong> to display executive printable report modal.</p>
+
+<hr/>
+
+<h2>17. SAMPLE DEMO SCENARIOS</h2>
+
+<h3>Scenario A: Normal Enterprise Web Traffic</h3>
+<ul>
+<li><strong>User Action:</strong> Simulate standard HTTP GET request from <code>PC1</code> (<code>192.168.1.10</code>) to <code>Server1</code> (<code>192.168.2.20</code>) with 0% packet loss.</li>
+<li><strong>System Processing:</strong> Dijkstra calculates path <code>PC1 -> SW1 -> R1 -> R2 -> SW2 -> Server1</code>. Metrics compute latency 24 ms, loss 0%, throughput 480 Mbps. Isolation Forest marks status as <code>normal</code>. Random Forest predicts <code>HEALTHY</code>.</li>
+<li><strong>Output:</strong> Green success notification, 100% path trajectory completion, optimal telemetry badge.</li>
+<li><strong>Real-World Benefit:</strong> Establishes baseline measurement for normal operational conditions.</li>
+</ul>
+
+<h3>Scenario B: Core Router Failure & Automatic Rerouting</h3>
+<ul>
+<li><strong>User Action:</strong> User toggles Primary Core Router <code>R2</code> to offline status, then clicks simulate packet.</li>
+<li><strong>System Processing:</strong> Dijkstra detects <code>R2</code> disabled, recomputes graph traversal using backup path <code>R1 -> R3 -> SW2</code>. Telemetry factors slight backup link latency increase (+12 ms). Isolation Forest marks status as <code>normal</code> (path available), Random Forest predicts <code>HEALTHY</code> or <code>WARNING</code>.</li>
+<li><strong>Output:</strong> Packet successfully arrives at <code>Server1</code> via secondary core router <code>R3</code>.</li>
+<li><strong>Real-World Benefit:</strong> Demonstrates automated high-availability (HA) network failover and link-state routing convergence.</li>
+</ul>
+
+<hr/>
+
+<h2>18. INPUT → PROCESS → OUTPUT TABLE</h2>
+
+<table><thead><tr><th>Feature</th><th>Input Parameters</th><th>Internal Processing</th><th>Generated Output</th></tr></thead><tbody><tr><td><strong>Packet Simulation</strong></td><td>IPs, Ports, Protocol, Payload, Size, TTL</td><td>Dijkstra pathfinding + PDU Encapsulation + Telemetry calculation + AI inference</td><td>Visual canvas traversal, layer stack, AI diagnosis card</td></tr><tr><td><strong>Router Failure</strong></td><td>Node ID (<code>R2</code>), active boolean status</td><td>Update node graph state, re-run min-heap Dijkstra solver</td><td>Updated topology layout and rerouted path array</td></tr><tr><td><strong>AI Telemetry Analysis</strong></td><td>8 QoS metrics (latency, loss, throughput, retx, etc.)</td><td>Standard scaling + Isolation Forest score + Random Forest classification</td><td>Health state badge, risk level, natural language root-cause report</td></tr><tr><td><strong>Scenario Execution</strong></td><td>Scenario ID string</td><td>Load preset parameters & flags, run simulation pipeline</td><td>Automated execution results and educational summary</td></tr><tr><td><strong>History Audit & Export</strong></td><td>Filter query / Record ID</td><td>SQLite <code>SELECT</code> query / Browser window print execution</td><td>Tabular history log table & printable executive report</td></tr></tbody></table>
+
+<hr/>
+
+<h2>19. ERROR HANDLING</h2>
+
+<ul>
+<li><strong>Invalid IPv4 / Port Input:</strong> Validated via regex. Returns <code>422 Unprocessable Entity</code> with specific field errors. Frontend displays inline red validation error messages.</li>
+<li><strong>Network Partitioning / Unreachable Destination:</strong> If all routing paths to destination are blocked by node failures, Dijkstra returns <code>success: false</code>. Backend returns <code>400 Bad Request</code> with message <em>"No available route found due to network partitioning"</em>.</li>
+<li><strong>Missing Machine Learning Models:</strong> If <code>.joblib</code> files are missing or unreadable, <code>NetworkAIAnalyzer</code> catches the exception and automatically engages the <strong>Rule-Based Fallback Engine</strong>, printing a fallback message without crashing the server.</li>
+<li><strong>Database Connection Errors:</strong> SQLite operations wrapped in <code>try-except</code> blocks. If database writes fail, API returns <code>500 Internal Server Error</code> with formatted JSON error details.</li>
+</ul>
+
+<hr/>
+
+<h2>20. CURRENT IMPLEMENTATION STATUS</h2>
+
+<h3>Fully Implemented</h3>
+<ul>
+<li>Complete 7-Layer OSI & 4-Layer TCP/IP Encapsulation and Decapsulation builder.</li>
+<li>Dijkstra Shortest Path routing solver with dynamic link weight calculation.</li>
+<li>Router node failure toggle and automatic path rerouting.</li>
+<li>Scikit-learn Machine Learning Anomaly Detection (Isolation Forest) & Classification (Random Forest).</li>
+<li>Robust Heuristic Rule-Based Fallback AI Engine.</li>
+<li>Wireshark-style protocol header & hex dump viewer.</li>
+<li>Interactive AI Telemetry Sandbox with live sliders.</li>
+<li>Recharts QoS time-series metrics visualizations.</li>
+<li>7 Educational preset scenarios.</li>
+<li>SQLite database persistence, history audit logging, and clear options.</li>
+<li>Executive printable PDF report generator.</li>
+<li>14 Pytest unit & integration test suites.</li>
+</ul>
+
+<h3>Partially Implemented</h3>
+<ul>
+<li><strong>Custom Topology Canvas Dragging:</strong> Nodes are rendered at fixed coordinates defined in <code>topology.py</code>; freeform user node dragging/adding is not currently available in the UI.</li>
+</ul>
+
+<h3>UI / Mock / Demo Only</h3>
+<ul>
+<li><strong>None:</strong> All visual UI elements in NetPath AI are backed by actual backend simulation calculations, graph pathfinding, ML inference, or SQLite database queries.</li>
+</ul>
+
+<hr/>
+
+<h2>21. LIMITATIONS</h2>
+
+<p>1. <strong>Simulated Physics Engine:</strong> QoS telemetry metrics (latency, jitter, drop rates) are calculated mathematically based on hop distance and simulation flags rather than sniffing live hardware interface drivers.</p>
+<p>2. <strong>Fixed 9-Node Reference Topology:</strong> The default topology consists of 9 pre-defined nodes (<code>PC1</code>, <code>Laptop1</code>, <code>AP1</code>, <code>SW1</code>, <code>R1</code>, <code>R2</code>, <code>R3</code>, <code>SW2</code>, <code>Server1</code>). Adding arbitrary custom nodes via UI is not supported.</p>
+<p>3. <strong>Synthetic Training Data:</strong> Machine Learning models are trained on 5,000 synthetic telemetry samples generated by <code>ai/dataset.py</code> rather than live production enterprise network traces.</p>
+
+<hr/>
+
+<h2>22. FUTURE SCOPE</h2>
+
+<ul>
+<li><strong>Short-Term Improvements:</strong></li>
+</ul>
+<p>  - Drag-and-drop interactive canvas editor allowing users to place custom routers, switches, and hosts.</p>
+<p>  - CSV export option for simulation history logs.</p>
+<ul>
+<li><strong>AI/ML Improvements:</strong></li>
+</ul>
+<p>  - Deep Learning LSTM (Long Short-Term Memory) neural networks for predicting future network congestion trends based on historical telemetry time-series.</p>
+<ul>
+<li><strong>Security & Scalability Improvements:</strong></li>
+</ul>
+<p>  - Multi-user authentication (JWT) and student submission portals for lab assignments.</p>
+<p>  - Containerization using Docker and Docker-Compose for single-command deployment.</p>
+
+<hr/>
+
+<h2>23. PROJECT ADVANTAGES</h2>
+
+<p>1. <strong>High Pedagogical Value:</strong> Makes abstract OSI layer encapsulation and Dijkstra routing algorithms visual, tangible, and easy to understand.</p>
+<p>2. <strong>Zero Dependencies & Robust Fallback:</strong> Runs completely locally without requiring cloud subscriptions or internet access; includes automatic rule-based fallback if ML models are absent.</p>
+<p>3. <strong>Comprehensive Feature Set:</strong> Integrates packet visualizer, Wireshark header inspector, ML sandbox, and scenario runner into a unified web application.</p>
+
+<hr/>
+
+<h2>24. REAL-WORLD APPLICATIONS</h2>
+
+<p>1. <strong>Higher Education Laboratories:</strong> Used in undergraduate and graduate Computer Science and Computer Networks laboratory courses.</p>
+<p>2. <strong>Network Engineering Training:</strong> Training junior network administrators on link-state routing behavior, failover mechanisms, and basic QoS metrics.</p>
+<p>3. <strong>AIOps & Network Monitoring Research:</strong> Benchmarking unsupervised anomaly detection algorithms (Isolation Forest) against network telemetry datasets.</p>
+
+<hr/>
+
+<h2>25. PROJECT NOVELTY & UNIQUENESS</h2>
+
+<ul>
+<li><strong>Dynamic Algorithmic Rerouting:</strong> Automatically recalculates Dijkstra shortest path and updates PDU headers in real-time when network hardware fails.</li>
+<li><strong>Dual-Layer AI Diagnostic Engine:</strong> Combines Machine Learning statistical inference with domain-specific engineering heuristic rules to produce clear English explanations.</li>
+<li><strong>Wireshark + Visual Simulator Integration:</strong> Combines visual canvas graph animation with low-level protocol header hex dumps in a single tool.</li>
+</ul>
+
+<hr/>
+
+<h2>26. VIVA PREPARATION (20 KEY QUESTIONS & ANSWERS)</h2>
+
+<h3>Q1: What is NetPath AI?</h3>
+<blockquote><strong>Answer:</strong> NetPath AI is an educational interactive web platform that visually animates network packet transmission across 7 OSI / 4 TCP-IP layers, executes dynamic Dijkstra pathfinding, and evaluates QoS metrics using Machine Learning.</blockquote>
+
+<h3>Q2: Which algorithm is used for network pathfinding in your project?</h3>
+<blockquote><strong>Answer:</strong> Dijkstra's Algorithm, implemented using a min-heap priority queue with time complexity $O((V + E) \log V)$.</blockquote>
+
+<h3>Q3: What happens when a core router (e.g. Router R2) fails during simulation?</h3>
+<blockquote><strong>Answer:</strong> The topology solver sets node status to offline, excluding it from the adjacency matrix. Dijkstra's algorithm immediately recalculates the optimal alternate path via backup Router R3.</blockquote>
+
+<h3>Q4: Why did you choose Isolation Forest for anomaly detection?</h3>
+<blockquote><strong>Answer:</strong> Isolation Forest is an unsupervised anomaly detection algorithm. Network anomalies are rare and often unlabelled; Isolation Forest isolates anomalous points near the tree root without requiring labelled training datasets.</blockquote>
+
+<h3>Q5: What machine learning model is used for network health classification?</h3>
+<blockquote><strong>Answer:</strong> Random Forest Classifier (<code>sklearn.ensemble.RandomForestClassifier</code>), which evaluates feature consensus across decision trees to classify network state into <code>HEALTHY</code>, <code>WARNING</code>, or <code>CRITICAL</code>.</blockquote>
+
+<h3>Q6: What features are fed into the Machine Learning model?</h3>
+<blockquote><strong>Answer:</strong> 8 telemetry features: Packet Size, Latency, Packet Loss %, Throughput, Retransmissions, Hops, TTL, and Jitter.</blockquote>
+
+<h3>Q7: What happens if the Machine Learning `.joblib` model files fail to load?</h3>
+<blockquote><strong>Answer:</strong> The application catches the exception and automatically engages a Heuristic Rule-Based Fallback Engine, ensuring zero downtime and continuous operation.</blockquote>
+
+<h3>Q8: What database engine is used in this project?</h3>
+<blockquote><strong>Answer:</strong> SQLite 3, an embedded relational database stored locally in <code>backend/netpath_ai.db</code>.</blockquote>
+
+<h3>Q9: How does the application perform PDU encapsulation?</h3>
+<blockquote><strong>Answer:</strong> <code>EncapsulationEngine</code> generates headers descending from Application (L7) -> Transport (L4) -> Network (L3) -> Data Link (L2) -> Physical (L1), calculating IPv4 One's Complement Checksums and CRC-32 FCS values.</blockquote>
+
+<h3>Q10: What framework is used for the backend API?</h3>
+<blockquote><strong>Answer:</strong> Python Flask 3.0 with Flask-CORS and Blueprint routing.</blockquote>
+
+<h3>Q11: What library is used for the frontend user interface?</h3>
+<blockquote><strong>Answer:</strong> React 19 bundled with Vite 6 and styled using Tailwind CSS 3.4.</blockquote>
+
+<h3>Q12: How are real-time telemetry metrics visualized?</h3>
+<blockquote><strong>Answer:</strong> Interactive time-series area charts and throughput histograms rendered using the Recharts library.</blockquote>
+
+<h3>Q13: What happens when an IP packet's TTL reaches 0?</h3>
+<blockquote><strong>Answer:</strong> The intermediate router discards the packet to prevent infinite routing loops and triggers an ICMP Time Exceeded event, demonstrated in our <em>TTL Expiration</em> scenario.</blockquote>
+
+<h3>Q14: How does TCP handle packet loss in your simulator?</h3>
+<blockquote><strong>Answer:</strong> When a packet drop is simulated on a link, TCP Retransmission Timeouts (RTO) or Fast Retransmit are triggered, resending the segment and incrementing the retransmission counter.</blockquote>
+
+<h3>Q15: How are input packet fields validated?</h3>
+<blockquote><strong>Answer:</strong> Backend regex checks validate IPv4 address formats, numeric port ranges (1–65535), packet sizes (64–9000 bytes), and TTL values (1–255).</blockquote>
+
+<h3>Q16: How do frontend and backend communicate?</h3>
+<blockquote><strong>Answer:</strong> Asynchronous HTTP REST API calls returning JSON responses, configured via Vite dev server proxy (<code>/api -> http://127.0.0.1:5000</code>).</blockquote>
+
+<h3>Q17: Can this project be used for classroom lab demonstrations?</h3>
+<blockquote><strong>Answer:</strong> Yes, it includes 7 preset scenarios, an interactive AI sandbox, and printable PDF report generation specifically designed for academic lectures and lab assignments.</blockquote>
+
+<h3>Q18: What is the computational complexity of your Dijkstra routing solver?</h3>
+<blockquote><strong>Answer:</strong> $O((V + E) \log V)$ where $V$ is the number of network nodes (routers/switches/hosts) and $E$ is the number of physical interconnect links.</blockquote>
+
+<h3>Q19: Is any cloud service or third-party API required to run this app?</h3>
+<blockquote><strong>Answer:</strong> No, NetPath AI is 100% self-contained and operates completely offline on local hardware.</blockquote>
+
+<h3>Q20: What are the main future scope enhancements?</h3>
+<blockquote><strong>Answer:</strong> Implementing interactive drag-and-drop custom topology node creation, LSTM deep learning models for time-series throughput forecasting, and Docker containerization.</blockquote>
+
+<hr/>
+
+<h2>27. RECOMMENDED PRESENTATION (PPT) STRUCTURE</h2>
+
+<pre><code>Slide 1:  Title &amp; Team Overview
+          - Project Name: NetPath AI
+          - Subtitle: AI-Based Packet Journey Visualizer &amp; Intelligent Network Telemetry
+
+Slide 2:  Introduction &amp; Problem Statement
+          - Theoretical computer network models (OSI/TCP-IP) are abstract and hard to visualize.
+          - Command-line tools (traceroute, ping) lack visual layer-by-layer PDU encapsulation.
+          - Need for an interactive visual simulator with integrated AI diagnostics.
+
+Slide 3:  Project Objectives
+          - Animate 7-layer OSI / 4-layer TCP-IP packet encapsulation in real-time.
+          - Implement dynamic Dijkstra shortest path router solver with instant router failover.
+          - Integrate Isolation Forest ML &amp; Random Forest for automated QoS anomaly detection.
+
+Slide 4:  Curriculum &amp; Syllabus Alignment
+          - Unit I: Physical &amp; Data Link Fundamentals (Topologies, OSI vs TCP/IP).
+          - Unit II: Framing &amp; Error Control (Ethernet IEEE 802.3, MAC, CRC-32).
+          - Unit III: Network Layer (IPv4, TTL, Dijkstra Shortest Path).
+          - Unit IV: Transport Layer (TCP 3-Way Handshake, RTO Retransmissions).
+          - Unit V: Application &amp; Network Intelligence (HTTP, QoS, Isolation Forest AI).
+
+Slide 5:  System Architecture
+          - Text-based block diagram showing React Frontend -&gt; Flask REST API -&gt; Dijkstra/Encapsulation Engines -&gt; Machine Learning Models -&gt; SQLite DB.
+
+Slide 6:  Technology Stack
+          - Table showing Python, Flask, Scikit-learn, React 19, Vite 6, Tailwind CSS, SQLite.
+
+Slide 7:  Dynamic Routing &amp; Router Failover Mechanism
+          - Dijkstra min-heap algorithm $O((V+E)\log V)$.
+          - Demonstration of path rerouting from Primary Router R2 to Backup Router R3 upon link outage.
+
+Slide 8:  7-Layer OSI &amp; 4-Layer TCP/IP Encapsulation
+          - PDU header generation breakdown (Data -&gt; Segment -&gt; Datagram -&gt; Frame -&gt; Bits).
+          - Wireshark protocol inspector and hexadecimal dump view.
+
+Slide 9:  Machine Learning &amp; AI Diagnostic Architecture
+          - 8-dimensional telemetry feature vector.
+          - Isolation Forest (Unsupervised Anomaly Score) + Random Forest (Health Classifier).
+          - Natural language root-cause diagnosis synthesis.
+
+Slide 10: Live Demonstration Screenshots / Video
+          - Screenshot of Canvas Visualizer, AI Telemetry Card, and Wireshark Header View.
+
+Slide 11: Results &amp; Key Features
+          - Real-time packet journey visualizer.
+          - 7 Educational scenarios.
+          - Printable PDF executive diagnostic report.
+
+Slide 12: Advantages &amp; Real-World Applications
+          - University Computer Networks laboratories.
+          - Network engineering training.
+          - Zero external dependencies; 100% offline operation.
+
+Slide 13: Limitations &amp; Future Scope
+          - Fixed 9-node default graph; future scope includes drag-and-drop topology builder.
+          - Synthetic ML dataset; future scope includes deep learning LSTM network forecasting.
+
+Slide 14: Conclusion &amp; Q&amp;A
+          - Summary statement and invitation for examiner questions.</code></pre>
+
+<hr/>
+
+<h2>28. PROJECT REPORT OUTLINE</h2>
+
+<pre><code>CHAPTER 1: INTRODUCTION
+  1.1 Overview &amp; Motivation
+  1.2 Problem Statement
+  1.3 Project Objectives
+  1.4 Organization of the Report
+
+CHAPTER 2: LITERATURE SURVEY &amp; THEORETICAL BACKGROUND
+  2.1 Review of OSI 7-Layer and TCP/IP 4-Layer Reference Models
+  2.2 Overview of Graph Pathfinding Algorithms (Dijkstra&#x27;s Algorithm)
+  2.3 Anomaly Detection in Network Telemetry using Machine Learning
+  2.4 Comparative Analysis of Existing Network Simulators (Cisco Packet Tracer, Wireshark, GNS3)
+
+CHAPTER 3: SYSTEM REQUIREMENTS &amp; SPECIFICATIONS
+  3.1 Functional Requirements
+  3.2 Non-Functional Requirements
+  3.3 Software Requirements (Python 3.10+, Flask, Scikit-Learn, React 19, Vite, SQLite)
+  3.4 Hardware Requirements
+
+CHAPTER 4: SYSTEM ARCHITECTURE &amp; DESIGN
+  4.1 High-Level System Architecture
+  4.2 Graph Topology &amp; Dijkstra Solver Module Design
+  4.3 Protocol Data Unit (PDU) Encapsulation Engine Design
+  4.4 Machine Learning Anomaly Detection Subsystem Design
+  4.5 Database Schema &amp; Entity-Relationship (ER) Design
+
+CHAPTER 5: IMPLEMENTATION DETAILS
+  5.1 Backend REST API Implementation (Flask &amp; Blueprints)
+  5.2 Simulation &amp; Encapsulation Engine Implementation
+  5.3 Machine Learning Model Training &amp; Rule-Based Fallback Engine
+  5.4 Frontend User Interface Implementation (React SPA &amp; Tailwind CSS)
+
+CHAPTER 6: TESTING &amp; VERIFICATION
+  6.1 Automated Unit &amp; Integration Testing (Pytest Suite)
+  6.2 Scenario-Based Validation (Router Failover, Packet Loss, TTL Expiration)
+  6.3 Machine Learning Precision &amp; Performance Evaluation
+
+CHAPTER 7: RESULTS &amp; DISCUSSION
+  7.1 Dashboard &amp; Telemetry KPI Renders
+  7.2 Wireshark Header Inspection &amp; Hex Dumps
+  7.3 Executive Printable Diagnostic Reports
+
+CHAPTER 8: CONCLUSION &amp; FUTURE SCOPE
+  8.1 Conclusion
+  8.2 Limitations
+  8.3 Future Enhancements
+
+REFERENCES
+  - Academic textbooks, Scikit-Learn documentation, React documentation, RFC standards.</code></pre>
+
+<hr/>
+
+<h2>29. ONE-PAGE QUICK REFERENCE CHEAT SHEET</h2>
+
+<ul>
+<li><strong>Project Name:</strong> NetPath AI</li>
+<li><strong>Purpose:</strong> Interactive network packet journey simulator with 7-layer OSI encapsulation, dynamic Dijkstra routing, and Machine Learning telemetry analysis.</li>
+<li><strong>Target Users:</strong> Computer Science Students, Networking Instructors, Network Engineers.</li>
+<li><strong>Tech Stack:</strong></li>
+</ul>
+<p>  - <strong>Frontend:</strong> React 19, Vite 6, Tailwind CSS 3.4, Lucide Icons, Recharts.</p>
+<p>  - <strong>Backend:</strong> Python 3.10, Flask 3.0, Flask-CORS, Pytest.</p>
+<p>  - <strong>Machine Learning:</strong> Scikit-learn (Isolation Forest, Random Forest Classifier, StandardScaler), Joblib.</p>
+<p>  - <strong>Database:</strong> SQLite 3 (<code>netpath_ai.db</code>).</p>
+<ul>
+<li><strong>Main Workflow:</strong></li>
+</ul>
+<p>  1. User submits packet parameters at <code>/simulator</code>.</p>
+<p>  2. Flask validates input & Dijkstra computes shortest node path.</p>
+<p>  3. Encapsulation Engine builds L7-L1 headers & hex dumps.</p>
+<p>  4. Telemetry metrics calculated (latency, loss, throughput, retransmissions).</p>
+<p>  5. Isolation Forest & Random Forest evaluate features; Heuristic engine formulates diagnosis.</p>
+<p>  6. SQLite stores run record; React renders animated canvas traversal & diagnostic cards.</p>
+<ul>
+<li><strong>How to Start:</strong></li>
+</ul>
+<p>  - Backend: <code>cd backend</code> → <code>.\venv\Scripts\Activate.ps1</code> → <code>python app.py</code> (Port 5000)</p>
+<p>  - Frontend: <code>cd frontend</code> → <code>npm install</code> → <code>npm run dev</code> (Port 3000)</p>
+<ul>
+<li><strong>Top 3 Advantages:</strong> Highly visual, zero external cloud dependencies, includes automatic heuristic rule fallback if ML models are absent.</li>
+</ul>
+
+<hr/>
+
+<h2>30. FINAL 2-MINUTE VIVA PRESENTATION SPEECH</h2>
+
+<blockquote><em>"Good morning respected examiners. My project is <strong>NetPath AI: AI-Based Packet Journey Visualizer for Intelligent Network Analysis</strong>.</em></blockquote>
+<blockquote></blockquote>
+<blockquote><em>In traditional Computer Networks courses, understanding how packets travel through layers and network devices is very abstract. Command-line tools like <code>ping</code> or <code>traceroute</code> do not visually show layer-by-layer header encapsulation, dynamic route recalculation, or AI-driven diagnostic advice.</em></blockquote>
+<blockquote></blockquote>
+<blockquote><em>To solve this, I built <strong>NetPath AI</strong> using <strong>React 19</strong> for the frontend, <strong>Flask</strong> for the backend, <strong>SQLite</strong> for database logging, and <strong>Scikit-learn</strong> for Machine Learning.</em></blockquote>
+<blockquote></blockquote>
+<blockquote><em>Here is how it works:</em></blockquote>
+<blockquote><em>When a user inputs packet details, our backend executes <strong>Dijkstra's Algorithm</strong> on a network graph to calculate the optimal path. If a core router fails, the engine automatically recalculates the route using a backup router.</em></blockquote>
+<blockquote></blockquote>
+<blockquote><em>Simultaneously, our Encapsulation Engine builds step-by-step headers for all 7 OSI layers—calculating IPv4 header checksums and CRC-32 Frame Check Sequences. The resulting telemetry metrics are fed into an <strong>Isolation Forest</strong> model for unsupervised anomaly detection and a <strong>Random Forest Classifier</strong> to assess network health. The system then outputs natural language diagnostic advice explaining root-cause network issues.</em></blockquote>
+<blockquote></blockquote>
+<blockquote><em>The project includes 7 educational scenarios, a Wireshark-style protocol header inspector, an interactive ML sandbox, and printable executive reports.</em></blockquote>
+<blockquote></blockquote>
+<blockquote><em>Thank you, and I am now open to your questions."</em></blockquote>
+
+    </div>
+</body>
+</html>

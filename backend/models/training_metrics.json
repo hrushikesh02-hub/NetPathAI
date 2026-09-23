@@ -1,0 +1,22 @@
+{
+  "isolation_forest_accuracy": 0.9613,
+  "health_classifier_accuracy": 0.9988,
+  "feature_columns": [
+    "packet_size",
+    "latency",
+    "packet_loss",
+    "throughput",
+    "retransmissions",
+    "hops",
+    "ttl",
+    "jitter"
+  ],
+  "classes": [
+    "HEALTHY",
+    "WARNING",
+    "CRITICAL"
+  ],
+  "num_training_samples": 3200,
+  "num_testing_samples": 800,
+  "status": "trained_successfully"
+}
