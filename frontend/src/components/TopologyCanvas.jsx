@@ -51,48 +51,41 @@ export default function TopologyCanvas({
   };
 
   return (
-    <div className="relative glass-panel rounded-xl border border-slate-800 p-4 overflow-hidden">
+    <div className="relative bg-white rounded-xl border border-slate-200 p-4 shadow-sm overflow-hidden">
       
       {/* Topology Header Controls */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-800">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100">
         <div className="flex items-center space-x-2">
-          <Network className="w-4 h-4 text-sky-400" />
-          <h3 className="text-xs font-bold text-white uppercase tracking-wider">Enterprise Network Topology Graph</h3>
-          <span className="text-[10px] font-medium px-2 py-0.5 rounded bg-slate-900 text-slate-400 border border-slate-800">
-            Dijkstra Pathfinding
+          <Network className="w-4 h-4 text-blue-500" />
+          <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Network Topology</h3>
+          <span className="text-[10px] font-medium px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
+            Dijkstra Routing
           </span>
         </div>
 
         <div className="flex items-center space-x-4 text-xs">
           <div className="flex items-center space-x-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-sky-400" />
-            <span className="text-slate-300">Active Path</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+            <span className="text-slate-600">Active Path</span>
           </div>
           <div className="flex items-center space-x-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
-            <span className="text-slate-300">Node Failed</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
+            <span className="text-slate-600">Node Failed</span>
           </div>
           <div className="flex items-center space-x-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
-            <span className="text-slate-300">Online</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+            <span className="text-slate-600">Online</span>
           </div>
         </div>
       </div>
 
       {/* SVG Canvas */}
-      <div className="relative w-full h-[380px] bg-[#070b14] rounded-lg border border-slate-800/80 overflow-hidden flex items-center justify-center">
+      <div className="relative w-full h-[380px] bg-slate-50 rounded-lg border border-slate-200 overflow-hidden flex items-center justify-center">
         
         {/* Grid pattern */}
-        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:16px_16px]" />
+        <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-[radial-gradient(#000000_1px,transparent_1px)] [background-size:16px_16px]" />
 
         <svg viewBox="0 0 1000 400" className="w-full h-full select-none">
-          <defs>
-            <filter id="glow-sky" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feComposite in="SourceGraphic" in2="blur" operator="over" />
-            </filter>
-          </defs>
-
           {/* 1. Draw Links */}
           {links.map((link, idx) => {
             const src = nodeMap[link.source];
@@ -111,7 +104,7 @@ export default function TopologyCanvas({
                   y1={src.y}
                   x2={tgt.x}
                   y2={tgt.y}
-                  stroke={isFaulty ? '#f43f5e' : isPathActive ? '#0284c7' : '#1e293b'}
+                  stroke={isFaulty ? '#ef4444' : isPathActive ? '#3b82f6' : '#cbd5e1'}
                   strokeWidth={isPathActive ? 3 : 1.5}
                   strokeDasharray={isFaulty ? '4 4' : isPathActive ? '6 4' : 'none'}
                   className={isPathActive ? 'animate-flow' : ''}
@@ -125,8 +118,8 @@ export default function TopologyCanvas({
                   width="36"
                   height="18"
                   rx="4"
-                  fill="#090d16"
-                  stroke={isPathActive ? '#0284c7' : '#1e293b'}
+                  fill="#ffffff"
+                  stroke={isPathActive ? '#3b82f6' : '#cbd5e1'}
                   strokeWidth="1"
                   className="pointer-events-none"
                 />
@@ -135,7 +128,7 @@ export default function TopologyCanvas({
                   y={(src.y + tgt.y) / 2 + 3.5}
                   textAnchor="middle"
                   fontSize="9"
-                  fill={isFaulty ? '#f43f5e' : isPathActive ? '#38bdf8' : '#64748b'}
+                  fill={isFaulty ? '#ef4444' : isPathActive ? '#2563eb' : '#64748b'}
                   fontWeight="600"
                   className="pointer-events-none"
                 >
@@ -156,15 +149,16 @@ export default function TopologyCanvas({
               <g
                 key={`node-${node.id}`}
                 transform={`translate(${node.x}, ${node.y})`}
-                className="cursor-pointer transition-transform hover:scale-105"
+                className="cursor-pointer group"
                 onClick={() => setSelectedNode(node)}
               >
+                <g className="transition-transform group-hover:scale-110">
                 {/* Active Ripple */}
                 {isCurrentHop && (
                   <circle
                     r="30"
                     fill="none"
-                    stroke="#38bdf8"
+                    stroke="#60a5fa"
                     strokeWidth="2"
                     className="animate-ping opacity-50"
                   />
@@ -173,15 +167,15 @@ export default function TopologyCanvas({
                 {/* Outer Glow Circle */}
                 <circle
                   r="22"
-                  fill={isDisabled ? '#271116' : isInPath ? '#0f172a' : '#090d16'}
+                  fill={isDisabled ? '#fef2f2' : isInPath ? '#eff6ff' : '#ffffff'}
                   stroke={
                     isDisabled
-                      ? '#f43f5e'
+                      ? '#ef4444'
                       : isCurrentHop
-                      ? '#38bdf8'
+                      ? '#3b82f6'
                       : isInPath
-                      ? '#0284c7'
-                      : '#1e293b'
+                      ? '#60a5fa'
+                      : '#cbd5e1'
                   }
                   strokeWidth={isCurrentHop ? 3 : isInPath ? 2 : 1.5}
                 />
@@ -192,12 +186,12 @@ export default function TopologyCanvas({
                     <Icon
                       className={`w-4 h-4 ${
                         isDisabled
-                          ? 'text-rose-500'
+                          ? 'text-red-500'
                           : isCurrentHop
-                          ? 'text-sky-300'
+                          ? 'text-blue-600'
                           : isInPath
-                          ? 'text-sky-400'
-                          : 'text-slate-400'
+                          ? 'text-blue-500'
+                          : 'text-slate-500'
                       }`}
                     />
                   </div>
@@ -209,7 +203,7 @@ export default function TopologyCanvas({
                   textAnchor="middle"
                   fontSize="11"
                   fontWeight="600"
-                  fill={isDisabled ? '#f43f5e' : isInPath ? '#ffffff' : '#94a3b8'}
+                  fill={isDisabled ? '#ef4444' : isInPath ? '#1e293b' : '#64748b'}
                 >
                   {node.id}
                 </text>
@@ -219,7 +213,7 @@ export default function TopologyCanvas({
                   y="48"
                   textAnchor="middle"
                   fontSize="9"
-                  fill="#64748b"
+                  fill="#94a3b8"
                   fontFamily="monospace"
                 >
                   {node.ip}
@@ -227,10 +221,11 @@ export default function TopologyCanvas({
 
                 {/* Status Dot */}
                 {isDisabled ? (
-                  <circle cx="15" cy="-15" r="5" fill="#f43f5e" stroke="#090d16" strokeWidth="1.5" />
+                  <circle cx="15" cy="-15" r="5" fill="#ef4444" stroke="#ffffff" strokeWidth="1.5" />
                 ) : (
-                  <circle cx="15" cy="-15" r="4" fill="#10b981" stroke="#090d16" strokeWidth="1.5" />
+                  <circle cx="15" cy="-15" r="4" fill="#10b981" stroke="#ffffff" strokeWidth="1.5" />
                 )}
+                </g>
               </g>
             );
           })}
@@ -240,8 +235,8 @@ export default function TopologyCanvas({
             <g
               transform={`translate(${nodeMap[currentHop].x}, ${nodeMap[currentHop].y - 32})`}
             >
-              <rect x="-26" y="-11" width="52" height="16" rx="4" fill="#38bdf8" />
-              <text x="0" y="1" textAnchor="middle" fontSize="9" fontWeight="bold" fill="#090d16">
+              <rect x="-26" y="-11" width="52" height="16" rx="4" fill="#3b82f6" />
+              <text x="0" y="1" textAnchor="middle" fontSize="9" fontWeight="bold" fill="#ffffff">
                 PACKET
               </text>
             </g>
@@ -251,21 +246,21 @@ export default function TopologyCanvas({
 
         {/* Floating Node Inspector Modal / Drawer */}
         {selectedNode && (
-          <div className="absolute top-3 right-3 w-72 glass-panel bg-[#0d1322] rounded-lg border border-slate-800 p-3.5 shadow-2xl z-20 text-xs">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+          <div className="absolute top-3 right-3 w-72 bg-white rounded-lg border border-slate-200 p-3.5 shadow-xl z-20 text-xs">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
               <div className="flex items-center space-x-2">
-                <span className="font-bold text-white">{selectedNode.label}</span>
+                <span className="font-bold text-slate-900">{selectedNode.label}</span>
                 <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${
                   disabledNodes.includes(selectedNode.id)
-                    ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                    : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                    ? 'bg-red-50 text-red-600 border border-red-200'
+                    : 'bg-emerald-50 text-emerald-600 border border-emerald-200'
                 }`}>
                   {disabledNodes.includes(selectedNode.id) ? 'OFFLINE' : 'ONLINE'}
                 </span>
               </div>
               <button 
                 onClick={() => setSelectedNode(null)} 
-                className="text-slate-400 hover:text-white"
+                className="text-slate-400 hover:text-slate-600"
               >
                 ✕
               </button>
@@ -273,24 +268,24 @@ export default function TopologyCanvas({
 
             <div className="mt-2.5 space-y-1 text-[11px]">
               <div className="flex justify-between">
-                <span className="text-slate-400">Node ID:</span>
-                <span className="text-white font-mono">{selectedNode.id}</span>
+                <span className="text-slate-500">Node ID:</span>
+                <span className="text-slate-900 font-mono">{selectedNode.id}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Device Type:</span>
-                <span className="text-sky-400 uppercase font-medium">{selectedNode.type}</span>
+                <span className="text-slate-500">Device Type:</span>
+                <span className="text-blue-600 uppercase font-medium">{selectedNode.type}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">IPv4 Address:</span>
-                <span className="text-slate-200 font-mono">{selectedNode.ip}</span>
+                <span className="text-slate-500">IPv4 Address:</span>
+                <span className="text-slate-700 font-mono">{selectedNode.ip}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">MAC Address:</span>
-                <span className="text-slate-200 font-mono text-[10px]">{selectedNode.mac}</span>
+                <span className="text-slate-500">MAC Address:</span>
+                <span className="text-slate-700 font-mono text-[10px]">{selectedNode.mac}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Subnet:</span>
-                <span className="text-slate-300 font-mono">{selectedNode.subnet}</span>
+                <span className="text-slate-500">Subnet:</span>
+                <span className="text-slate-600 font-mono">{selectedNode.subnet}</span>
               </div>
             </div>
 
@@ -302,8 +297,8 @@ export default function TopologyCanvas({
                 }}
                 className={`mt-3 w-full py-1.5 rounded-md text-xs font-semibold flex items-center justify-center space-x-1.5 transition-colors ${
                   disabledNodes.includes(selectedNode.id)
-                    ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
-                    : 'bg-rose-600 hover:bg-rose-500 text-white'
+                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                    : 'bg-red-600 hover:bg-red-700 text-white'
                 }`}
               >
                 {disabledNodes.includes(selectedNode.id) ? (
@@ -325,27 +320,27 @@ export default function TopologyCanvas({
       </div>
 
       {/* Path Summary */}
-      <div className="mt-3 flex flex-wrap items-center justify-between text-xs text-slate-400 gap-2">
+      <div className="mt-3 flex flex-wrap items-center justify-between text-xs text-slate-500 gap-2">
         <div className="flex items-center space-x-2">
-          <span className="font-semibold text-slate-300">Dijkstra Computed Route:</span>
-          <div className="flex items-center space-x-1 font-mono text-sky-400 font-medium">
+          <span className="font-semibold text-slate-700">Computed Route:</span>
+          <div className="flex items-center space-x-1 font-mono text-blue-600 font-medium">
             {activePath && activePath.length > 0 ? (
               activePath.map((node, i) => (
                 <React.Fragment key={node}>
-                  <span className={`px-1.5 py-0.5 rounded text-[11px] ${currentHop === node ? 'bg-sky-500 text-slate-950 font-bold' : 'bg-slate-900 text-slate-300'}`}>
+                  <span className={`px-1.5 py-0.5 rounded text-[11px] ${currentHop === node ? 'bg-blue-600 text-white font-bold' : 'bg-slate-100 text-slate-700'}`}>
                     {node}
                   </span>
-                  {i < activePath.length - 1 && <span className="text-slate-600">→</span>}
+                  {i < activePath.length - 1 && <span className="text-slate-400">→</span>}
                 </React.Fragment>
               ))
             ) : (
-              <span className="text-rose-400">No route available (Network Partitioned)</span>
+              <span className="text-red-500">No route available (Network Partitioned)</span>
             )}
           </div>
         </div>
 
         <div className="text-[11px] text-slate-400">
-          Tip: Click any router/node to inspect properties or simulate hardware failure.
+          Tip: Click any node to inspect or simulate failure.
         </div>
       </div>
 

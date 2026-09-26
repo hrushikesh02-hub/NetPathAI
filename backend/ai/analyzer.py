@@ -73,42 +73,42 @@ class NetworkAIAnalyzer:
 
         if health_class == "HEALTHY" and not is_anomaly:
             return {
-                "reason": f"Network telemetry is optimal with low latency ({lat:.1f} ms), negligible packet loss ({loss:.1f}%), and zero retransmission overhead.",
-                "possible_cause": "All intermediary switches, edge routers, and physical links are operating well within capacity thresholds.",
-                "recommendation": "Maintain current link-state monitoring and QoS bandwidth allocations."
+                "reason": f"The network is running smoothly with low delay ({lat:.1f} ms), almost no lost packets ({loss:.1f}%), and no need to resend data.",
+                "possible_cause": "All routers and cables are working well and are not overloaded.",
+                "recommendation": "Everything looks good! Keep monitoring the network as usual."
             }
 
         # Identify Specific Bottlenecks
         if loss >= 15.0:
-            reasons.append(f"Severe packet drop rate detected ({loss:.1f}%) exceeding the 5% SLA threshold.")
-            possible_causes.append("Interface queue buffer overflow, physical cable damage, or severe link-layer noise.")
-            recommendations.append("Inspect switch interface queue depth and verify CRC frame drop counters on physical interfaces.")
+            reasons.append(f"Too many packets are being lost ({loss:.1f}%) along the way.")
+            possible_causes.append("A router might be overloaded, a cable might be damaged, or there is interference.")
+            recommendations.append("Check the cables and make sure the routers aren't too busy.")
 
         if lat >= 250.0:
-            reasons.append(f"Elevated round-trip latency ({lat:.1f} ms) with high jitter ({jitter:.1f} ms).")
-            possible_causes.append("Bufferbloat on congested WAN gateway or sub-optimal routing hops.")
-            recommendations.append("Enable Active Queue Management (CoDel / FQ-CoDel) or optimize OSPF/BGP metric cost.")
+            reasons.append(f"It's taking a long time for data to travel ({lat:.1f} ms delay).")
+            possible_causes.append("The path might be too long, or traffic is getting stuck in a traffic jam at a router.")
+            recommendations.append("Try finding a shorter path or upgrading the router to handle more traffic.")
 
         if retx >= 4:
-            reasons.append(f"Frequent TCP retransmissions ({retx} retransmit cycles) causing TCP window collapse.")
-            possible_causes.append("Asymmetric duplex mismatch, unacknowledged segment drops, or high RTT variance.")
-            recommendations.append("Check TCP MSS/MTU negotiation and verify duplex settings between Edge Router R1 and Core Router R2.")
+            reasons.append(f"Data had to be resent multiple times ({retx} times) because it didn't arrive.")
+            possible_causes.append("Packets are getting lost on the way, or connections are unstable.")
+            recommendations.append("Check for bad cables or Wi-Fi interference between the devices.")
 
         if tp <= 35.0 and tp > 0.0:
-            reasons.append(f"Constrained network throughput ({tp:.1f} Mbps) despite available link capacity.")
-            possible_causes.append("TCP congestion control backoff (AIMD reduction) due to packet loss events.")
-            recommendations.append("Reduce link saturation by throttling non-critical broadcast traffic and prioritize DSCP voice/video queues.")
+            reasons.append(f"The network speed is very slow ({tp:.1f} Mbps).")
+            possible_causes.append("The network is crowded with too much traffic.")
+            recommendations.append("Limit unnecessary downloads to free up space for important traffic.")
 
         if hops >= 7:
-            reasons.append(f"High routing hop count ({hops} hops) resulting in cumulative processing delay.")
-            possible_causes.append("Sub-optimal routing paths or routing loops.")
-            recommendations.append("Audit routing tables and recompute Dijkstra shortest path.")
+            reasons.append(f"The data is taking too many steps ({hops} jumps) to reach its destination.")
+            possible_causes.append("The route chosen is not the most direct one.")
+            recommendations.append("Check the routing settings to find a more direct path.")
 
         # Default fallback text if specific conditions weren't flagged
         if not reasons:
-            reasons.append("Telemetry metrics deviate from normal baseline traffic distribution.")
-            possible_causes.append("Transient network burst or routing micro-loop.")
-            recommendations.append("Monitor link telemetry and re-evaluate interface error counters.")
+            reasons.append("The network behavior is unusual compared to normal.")
+            possible_causes.append("There might be a sudden spike in traffic or a temporary glitch.")
+            recommendations.append("Keep an eye on the network to see if it happens again.")
 
         return {
             "reason": " ".join(reasons),

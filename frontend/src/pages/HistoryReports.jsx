@@ -25,7 +25,7 @@ export default function HistoryReports() {
   }, []);
 
   const handleClearHistory = async () => {
-    if (window.confirm('Are you sure you want to clear all simulation history logs?')) {
+    if (window.confirm('Are you sure you want to clear all history logs?')) {
       await api.clearHistory();
       await fetchHistory();
     }
@@ -50,76 +50,60 @@ export default function HistoryReports() {
   });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 print:p-0 print:m-0">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 print:p-0 print:m-0">
       
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 print:hidden">
         <div>
-          <div className="flex items-center space-x-2">
-            <span className="px-2.5 py-0.5 rounded bg-sky-500/10 text-sky-400 border border-sky-500/20 text-xs font-semibold uppercase tracking-wider">
-              Audit & Persistence
-            </span>
-            <span className="text-xs text-slate-400">SQLite Logged Telemetry & Diagnostic Reports</span>
-          </div>
-          <h1 className="text-2xl font-bold text-white tracking-tight mt-1">
-            Simulation History & Executive Report
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+            Simulation History
           </h1>
+          <p className="text-sm text-slate-500 mt-1">View past simulation results and metrics.</p>
         </div>
 
         <div className="flex items-center space-x-3">
           <button
             onClick={handlePrint}
-            className="px-4 py-2 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs flex items-center space-x-2 shadow transition-all"
+            className="px-4 py-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm flex items-center space-x-2 shadow-sm transition-all"
           >
-            <Printer className="w-4 h-4 text-slate-950" />
-            <span>EXPORT / PRINT REPORT</span>
+            <Printer className="w-4 h-4 text-white" />
+            <span>Print Report</span>
           </button>
 
           <button
             onClick={handleClearHistory}
-            className="px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-rose-950/60 hover:text-rose-400 text-slate-300 text-xs font-bold border border-slate-800 transition-colors flex items-center space-x-1.5"
+            className="px-4 py-2 rounded-md bg-white hover:bg-red-50 text-red-600 text-sm font-medium border border-slate-200 hover:border-red-200 transition-colors flex items-center space-x-1.5"
           >
-            <Trash2 className="w-3.5 h-3.5" />
+            <Trash2 className="w-4 h-4" />
             <span>Clear Logs</span>
           </button>
         </div>
       </div>
 
-      {/* Printable Executive Report Header */}
-      <div className="glass-panel rounded-xl border border-slate-800 p-6 space-y-4">
-        <div className="flex items-center justify-between pb-4 border-b border-slate-800">
-          <div>
-            <h2 className="text-sm font-bold text-white uppercase tracking-wider">NetPath AI - Executive Network Telemetry Summary</h2>
-            <p className="text-xs text-slate-400">Automated packet journey audit report generated from simulation logs</p>
-          </div>
-          <div className="text-right text-xs font-mono text-slate-400">
-            <div>Total Audited Runs: <strong className="text-sky-400">{historyList.length}</strong></div>
-            <div>Generated: {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}</div>
-          </div>
-        </div>
-
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-4">
+        
         {/* Filter Controls */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 print:hidden">
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100 print:hidden">
           <div className="relative w-72">
-            <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-500" />
+            <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
             <input
               type="text"
-              placeholder="Search packet ID, IP, protocol..."
+              placeholder="Search ID, IP, protocol..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-800 rounded-lg pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500"
+              className="w-full bg-slate-50 border border-slate-200 rounded-md pl-9 pr-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             />
           </div>
 
-          <div className="flex items-center space-x-1 text-xs">
+          <div className="flex items-center space-x-2 text-sm">
             {['ALL', 'DELIVERED', 'LOST', 'ANOMALY'].map(st => (
               <button
                 key={st}
                 onClick={() => setFilterStatus(st)}
-                className={`px-3 py-1 rounded-md font-semibold border transition-all ${
+                className={`px-3 py-1.5 rounded-md font-medium border transition-all ${
                   filterStatus === st
-                    ? 'bg-sky-500/15 text-sky-300 border-sky-500/30'
-                    : 'bg-slate-900 text-slate-400 border-slate-800 hover:bg-slate-800'
+                    ? 'bg-blue-50 text-blue-700 border-blue-200'
+                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
                 }`}
               >
                 {st}
@@ -129,57 +113,55 @@ export default function HistoryReports() {
         </div>
 
         {/* Table */}
-        <div className="overflow-x-auto mt-4">
-          <table className="w-full text-left text-xs">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
             <thead>
-              <tr className="text-slate-400 border-b border-slate-800 text-[11px] uppercase tracking-wider">
-                <th className="pb-3">Packet ID</th>
-                <th className="pb-3">Timestamp</th>
-                <th className="pb-3">Route (Src → Dst)</th>
-                <th className="pb-3">Protocol</th>
-                <th className="pb-3">Latency</th>
-                <th className="pb-3">Loss %</th>
-                <th className="pb-3">Hops</th>
-                <th className="pb-3">Status</th>
-                <th className="pb-3">AI Health</th>
+              <tr className="text-slate-500 border-b border-slate-100 uppercase tracking-wider text-[11px]">
+                <th className="pb-3 font-semibold">Packet ID</th>
+                <th className="pb-3 font-semibold">Timestamp</th>
+                <th className="pb-3 font-semibold">Route (Src → Dst)</th>
+                <th className="pb-3 font-semibold">Protocol</th>
+                <th className="pb-3 font-semibold">Latency</th>
+                <th className="pb-3 font-semibold">Hops</th>
+                <th className="pb-3 font-semibold">Status</th>
+                <th className="pb-3 font-semibold">Diagnosis</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60 font-mono">
+            <tbody className="divide-y divide-slate-100">
               {filteredHistory.length > 0 ? (
                 filteredHistory.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-800/30">
-                    <td className="py-3 font-bold text-sky-400">{item.packet_id}</td>
-                    <td className="py-3 text-slate-400 text-[10px]">{item.timestamp}</td>
-                    <td className="py-3 text-slate-200 font-sans">
+                  <tr key={item.id} className="hover:bg-slate-50">
+                    <td className="py-3 font-medium text-slate-900">{item.packet_id}</td>
+                    <td className="py-3 text-slate-500 text-xs">{item.timestamp}</td>
+                    <td className="py-3 text-slate-700">
                       {item.source_ip} → {item.destination_ip}
                     </td>
                     <td className="py-3">
-                      <span className="px-2 py-0.5 rounded bg-slate-900 text-slate-300 text-[10px] font-bold border border-slate-800">
+                      <span className="px-2 py-1 rounded bg-slate-100 text-slate-700 text-xs font-medium border border-slate-200">
                         {item.protocol}
                       </span>
                     </td>
-                    <td className="py-3 text-slate-300">{item.latency} ms</td>
-                    <td className="py-3 text-slate-300">{item.packet_loss}%</td>
-                    <td className="py-3 text-slate-300">{item.hops}</td>
-                    <td className="py-3 font-sans">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                        item.status?.includes('DELIVERED') ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                    <td className="py-3 text-slate-700">{item.latency} ms</td>
+                    <td className="py-3 text-slate-700">{item.hops}</td>
+                    <td className="py-3">
+                      <span className={`px-2 py-1 rounded-md text-xs font-medium ${
+                        item.status?.includes('DELIVERED') ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'
                       }`}>
-                        {item.status}
+                        {item.status?.includes('DELIVERED') ? 'Delivered' : 'Failed'}
                       </span>
                     </td>
-                    <td className="py-3 font-sans">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                        item.ai_status === 'anomaly' ? 'bg-rose-500/10 text-rose-400' : 'bg-emerald-500/10 text-emerald-400'
+                    <td className="py-3">
+                      <span className={`px-2 py-1 rounded-md text-xs font-medium ${
+                        item.ai_status === 'anomaly' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-slate-100 text-slate-700 border border-slate-200'
                       }`}>
-                        {item.ai_health || (item.ai_status === 'anomaly' ? 'ANOMALY' : 'HEALTHY')}
+                        {item.ai_health || (item.ai_status === 'anomaly' ? 'Anomaly' : 'Normal')}
                       </span>
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={9} className="py-8 text-center text-slate-500 font-sans">
+                  <td colSpan={8} className="py-8 text-center text-slate-500">
                     No matching history records found.
                   </td>
                 </tr>
