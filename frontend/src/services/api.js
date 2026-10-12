@@ -3,7 +3,7 @@
  * Communicates with the Flask REST Backend with transparent error handling.
  */
 
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
+const API_BASE = import.meta.env?.VITE_API_URL || '/api';
 
 export const api = {
   // System Health
@@ -72,7 +72,7 @@ export const api = {
         body: JSON.stringify({ ...packetData, scenario_flags: scenarioFlags })
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || data.error || 'Simulation failed');
+      if (!res.ok) throw new Error(Object.values(data.errors || {}).join(' ') || data.error || data.message || 'Simulation failed');
       return data;
     } catch (err) {
       console.error('simulateJourney error:', err);
@@ -105,19 +105,7 @@ export const api = {
       const data = await res.json();
       return data.summary;
     } catch (err) {
-      console.warn('getMetricsSummary fallback:', err.message);
-      return {
-        total_packets: 0,
-        successful_packets: 0,
-        lost_packets: 0,
-        avg_latency: 24.5,
-        avg_packet_loss: 0.0,
-        avg_throughput: 500.0,
-        anomaly_count: 0,
-        network_health: 'HEALTHY',
-        health_badge: 'emerald',
-        recent_packets: []
-      };
+      throw err;
     }
   },
 
@@ -159,7 +147,7 @@ export const api = {
       return data.history || [];
     } catch (err) {
       console.error('getHistory error:', err);
-      return [];
+      throw err;
     }
   },
 
@@ -178,6 +166,7 @@ export const api = {
   async deleteHistory(id) {
     try {
       const res = await fetch(`${API_BASE}/history/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error(`Delete failed: HTTP ${res.status}`);
       return await res.json();
     } catch (err) {
       console.error('deleteHistory error:', err);
@@ -188,6 +177,7 @@ export const api = {
   async clearHistory() {
     try {
       const res = await fetch(`${API_BASE}/history/clear`, { method: 'POST' });
+      if (!res.ok) throw new Error(`Clear failed: HTTP ${res.status}`);
       return await res.json();
     } catch (err) {
       console.error('clearHistory error:', err);

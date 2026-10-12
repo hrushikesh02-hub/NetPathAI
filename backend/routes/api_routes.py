@@ -4,6 +4,10 @@ Exposes routes for packet simulation, routing, AI inference, topology manipulati
 """
 
 from flask import Blueprint, request, jsonify
+from copy import deepcopy
+from threading import RLock
+from werkzeug.exceptions import BadRequest, UnsupportedMediaType
+from validation import scenario_flags as validate_flags, number
 import traceback
 
 from simulation.topology import NetworkTopology
@@ -12,6 +16,7 @@ from simulation.packet_engine import PacketEngine
 from simulation.scenarios import SCENARIOS
 from ai.analyzer import NetworkAIAnalyzer
 from database.db import (
+    get_db_connection,
     save_simulation_record,
     get_simulation_history,
     get_simulation_by_id,
@@ -26,25 +31,48 @@ api_bp = Blueprint("api", __name__, url_prefix="/api")
 global_topology = NetworkTopology()
 global_engine = PacketEngine(global_topology)
 global_ai = NetworkAIAnalyzer()
+topology_lock = RLock()
+
+
+@api_bp.before_request
+def validate_json_body():
+    if request.method == "POST" and request.endpoint != "api.clear_history":
+        try:
+            data = request.get_json()
+        except (BadRequest, UnsupportedMediaType):
+            return jsonify(success=False, error="A valid JSON object is required."), 400
+        if not isinstance(data, dict):
+            return jsonify(success=False, error="A JSON object is required."), 400
+
+
+def topology_snapshot():
+    with topology_lock:
+        return deepcopy(global_topology)
 
 @api_bp.route("/health", methods=["GET"])
 def health_check():
     """System health check and module status."""
+    try:
+        with get_db_connection() as conn:
+            conn.execute("SELECT 1 FROM simulation_history LIMIT 1")
+        database_ok = True
+    except Exception:
+        database_ok = False
     return jsonify({
-        "status": "healthy",
+        "status": "healthy" if database_ok else "degraded",
         "service": "NetPath AI Backend",
         "version": "1.0.0",
         "ml_model_active": global_ai.is_ml_active,
-        "database": "SQLite (operational)",
+        "database": "SQLite (operational)" if database_ok else "unavailable",
         "topology_nodes_count": len(global_topology.nodes)
-    }), 200
+    }), 200 if database_ok else 503
 
 @api_bp.route("/topology", methods=["GET"])
 def get_topology():
     """Returns the current network topology graph."""
     return jsonify({
         "success": True,
-        "topology": global_topology.to_dict()
+        "topology": topology_snapshot().to_dict()
     }), 200
 
 @api_bp.route("/topology/failure", methods=["POST"])
@@ -52,21 +80,25 @@ def toggle_topology_failure():
     """Toggles active/disabled state of a node (e.g. Router 2)."""
     data = request.get_json() or {}
     node_id = data.get("node_id")
-    is_active = bool(data.get("is_active", True))
+    is_active = data.get("is_active", True)
+    if not isinstance(is_active, bool):
+        return jsonify(success=False, error="is_active must be a boolean."), 422
 
-    if not node_id or node_id not in global_topology.nodes:
+    if not isinstance(node_id, str) or node_id not in global_topology.nodes:
         return jsonify({"success": False, "error": f"Node ID '{node_id}' not found."}), 400
 
-    global_topology.set_node_status(node_id, is_active)
+    with topology_lock:
+        global_topology.set_node_status(node_id, is_active)
+        snapshot = deepcopy(global_topology)
 
     # Recalculate default path PC1 -> Server1 for instant feedback
-    path_result = global_topology.find_shortest_path("PC1", "Server1")
+    path_result = snapshot.find_shortest_path("PC1", "Server1")
 
     return jsonify({
         "success": True,
         "node_id": node_id,
         "new_status": "online" if is_active else "offline",
-        "topology": global_topology.to_dict(),
+        "topology": snapshot.to_dict(),
         "recalculated_path": path_result
     }), 200
 
@@ -99,7 +131,7 @@ def simulate_packet_journey():
     """
     try:
         data = request.get_json() or {}
-        scenario_flags = data.get("scenario_flags", {})
+        scenario_flags = validate_flags(data.get("scenario_flags", {}))
 
         is_valid, errors = PacketEngine.validate_packet_input(data)
         if not is_valid:
@@ -109,17 +141,14 @@ def simulate_packet_journey():
                 "message": "Packet validation error."
             }), 422
 
-        # Check if router should be disabled by scenario
+        # Fault injection is isolated to this run; manual topology controls persist.
+        run_topology = topology_snapshot()
         if scenario_flags.get("disable_router"):
             dis_node = scenario_flags["disable_router"]
-            global_topology.set_node_status(dis_node, False)
-        elif "disable_router" in scenario_flags and scenario_flags["disable_router"] is None:
-            # Re-enable all nodes if not specified
-            for n in list(global_topology.disabled_nodes):
-                global_topology.set_node_status(n, True)
+            run_topology.set_node_status(dis_node, False)
 
         # Run journey simulation
-        sim_result = global_engine.simulate_journey(data, scenario_flags)
+        sim_result = PacketEngine(run_topology).simulate_journey(data, scenario_flags)
         if not sim_result["success"]:
             return jsonify({
                 "success": False,
@@ -162,14 +191,17 @@ def simulate_packet_journey():
             "success": True,
             "record_id": record_id,
             "simulation": sim_result,
-            "ai_analysis": ai_result
+            "ai_analysis": ai_result,
+            "topology": run_topology.to_dict()
         }), 200
 
+    except ValueError as e:
+        return jsonify(success=False, error=str(e)), 422
     except Exception as e:
         print("Simulation error:", traceback.format_exc())
         return jsonify({
             "success": False,
-            "error": str(e),
+            "error": "Simulation could not be completed.",
             "message": "Internal simulation error."
         }), 500
 
@@ -184,10 +216,12 @@ def ai_analyze():
             "success": True,
             "analysis": analysis
         }), 200
+    except ValueError as e:
+        return jsonify(success=False, error=str(e)), 422
     except Exception as e:
         return jsonify({
             "success": False,
-            "error": str(e)
+            "error": "Analysis could not be completed."
         }), 500
 
 @api_bp.route("/metrics", methods=["GET"])
@@ -216,22 +250,19 @@ def run_scenario():
     data = request.get_json() or {}
     scenario_id = data.get("scenario_id", "NORMAL")
 
-    if scenario_id not in SCENARIOS:
+    if not isinstance(scenario_id, str) or scenario_id not in SCENARIOS:
         return jsonify({"success": False, "error": f"Scenario '{scenario_id}' not found."}), 404
 
     scenario = SCENARIOS[scenario_id]
     packet_params = scenario["params"]
     scenario_flags = scenario["flags"]
 
-    # If router failure scenario, disable R2
+    # Presets start from a fresh topology without changing manual controls.
+    run_topology = NetworkTopology()
     if scenario_flags.get("disable_router"):
-        global_topology.set_node_status(scenario_flags["disable_router"], False)
-    else:
-        # Re-enable all
-        for n in list(global_topology.disabled_nodes):
-            global_topology.set_node_status(n, True)
+        run_topology.set_node_status(scenario_flags["disable_router"], False)
 
-    sim_result = global_engine.simulate_journey(packet_params, scenario_flags)
+    sim_result = PacketEngine(run_topology).simulate_journey(packet_params, scenario_flags)
     if not sim_result["success"]:
         return jsonify({
             "success": False,
@@ -274,14 +305,18 @@ def run_scenario():
         "scenario": scenario,
         "record_id": record_id,
         "simulation": sim_result,
-        "ai_analysis": ai_result
+        "ai_analysis": ai_result,
+        "topology": run_topology.to_dict()
     }), 200
 
 @api_bp.route("/history", methods=["GET"])
 def get_history():
     """Fetches simulation history logs."""
-    limit = int(request.args.get("limit", 50))
-    offset = int(request.args.get("offset", 0))
+    try:
+        limit = number(request.args.get("limit", 50), "limit", 1, 500, True)
+        offset = number(request.args.get("offset", 0), "offset", 0, 1000000, True)
+    except ValueError as exc:
+        return jsonify(success=False, error=str(exc)), 422
     history = get_simulation_history(limit, offset)
     return jsonify({
         "success": True,
@@ -299,7 +334,7 @@ def handle_single_history(record_id):
         return jsonify({"success": True, "record": record}), 200
     else:
         success = delete_simulation_record(record_id)
-        return jsonify({"success": success}), 200
+        return jsonify({"success": success}), 200 if success else 404
 
 @api_bp.route("/history/clear", methods=["POST"])
 def clear_history():

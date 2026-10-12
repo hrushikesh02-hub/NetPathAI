@@ -13,13 +13,19 @@ import { api } from '../services/api';
 export default function Dashboard() {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [quickRunning, setQuickRunning] = useState(false);
+  const [error, setError] = useState(null);
 
   const fetchDashboardData = async () => {
     setLoading(true);
-    const data = await api.getMetricsSummary();
-    setSummary(data);
-    setLoading(false);
+    setError(null);
+    try {
+      setSummary(await api.getMetricsSummary());
+    } catch (err) {
+      setSummary(null);
+      setError(`Metrics unavailable: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -32,11 +38,12 @@ export default function Dashboard() {
     navigate(`/simulator?scenario=${scenarioId}`);
   };
 
-  const healthState = summary?.network_health || 'HEALTHY';
+  const healthState = summary?.network_health || 'UNKNOWN';
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       
+      {error && <p role="alert" className="text-red-700">{error}</p>}
       {/* Header */}
       <div className="bg-white rounded-xl p-6 border border-slate-200 hover:border-blue-300 hover:shadow-md transition-all duration-300 shadow-sm space-y-6">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
@@ -51,14 +58,14 @@ export default function Dashboard() {
 
           <div className="flex flex-col items-center justify-center p-3 rounded-lg bg-slate-50 border border-slate-200 min-w-[150px] text-center">
             <span className="text-xs font-semibold text-slate-500 uppercase">
-              System Status
+              Simulation History Health
             </span>
             <div className="flex items-center space-x-2 mt-1">
               <span className={`w-2.5 h-2.5 rounded-full ${
-                healthState === 'HEALTHY' ? 'bg-emerald-500' : healthState === 'WARNING' ? 'bg-amber-500' : 'bg-red-500'
+                healthState === 'HEALTHY' ? 'bg-emerald-500' : healthState === 'WARNING' ? 'bg-amber-500' : healthState === 'CRITICAL' ? 'bg-red-500' : 'bg-slate-400'
               }`} />
               <span className={`text-sm font-bold ${
-                healthState === 'HEALTHY' ? 'text-emerald-700' : healthState === 'WARNING' ? 'text-amber-700' : 'text-red-700'
+                healthState === 'HEALTHY' ? 'text-emerald-700' : healthState === 'WARNING' ? 'text-amber-700' : healthState === 'CRITICAL' ? 'text-red-700' : 'text-slate-500'
               }`}>
                 {healthState}
               </span>
@@ -76,7 +83,7 @@ export default function Dashboard() {
           ].map((sc) => (
             <button
               key={sc.id}
-              disabled={quickRunning}
+              disabled={loading}
               onClick={() => handleQuickRun(sc.id)}
               className={`px-4 py-2 rounded-md text-sm font-medium border transition-all flex items-center space-x-2 ${sc.color} disabled:opacity-50 shadow-sm`}
             >
@@ -94,7 +101,7 @@ export default function Dashboard() {
             <span className="text-sm font-semibold text-slate-500">Total Packets</span>
             <Activity className="w-5 h-5 text-blue-500" />
           </div>
-          <span className="text-2xl font-bold text-slate-900">{summary?.total_packets || 0}</span>
+          <span className="text-2xl font-bold text-slate-900">{summary?.total_packets ?? '--'}</span>
         </div>
         
         <div className="bg-white p-5 rounded-xl border border-slate-200 hover:border-blue-300 hover:shadow-md transition-all duration-300 shadow-sm flex flex-col">
@@ -102,7 +109,7 @@ export default function Dashboard() {
             <span className="text-sm font-semibold text-slate-500">Delivered</span>
             <CheckCircle2 className="w-5 h-5 text-emerald-500" />
           </div>
-          <span className="text-2xl font-bold text-slate-900">{summary?.successful_packets || 0}</span>
+          <span className="text-2xl font-bold text-slate-900">{summary?.successful_packets ?? '--'}</span>
         </div>
 
         <div className="bg-white p-5 rounded-xl border border-slate-200 hover:border-blue-300 hover:shadow-md transition-all duration-300 shadow-sm flex flex-col">
@@ -110,7 +117,7 @@ export default function Dashboard() {
             <span className="text-sm font-semibold text-slate-500">Avg Latency</span>
             <Clock className="w-5 h-5 text-indigo-500" />
           </div>
-          <span className="text-2xl font-bold text-slate-900">{summary?.avg_latency || 0} <span className="text-sm text-slate-400 font-normal">ms</span></span>
+          <span className="text-2xl font-bold text-slate-900">{summary?.avg_latency ?? '--'} <span className="text-sm text-slate-400 font-normal">ms</span></span>
         </div>
 
         <div className="bg-white p-5 rounded-xl border border-slate-200 hover:border-blue-300 hover:shadow-md transition-all duration-300 shadow-sm flex flex-col">
@@ -118,7 +125,7 @@ export default function Dashboard() {
             <span className="text-sm font-semibold text-slate-500">Failed / Dropped</span>
             <XCircle className="w-5 h-5 text-red-500" />
           </div>
-          <span className="text-2xl font-bold text-slate-900">{summary?.lost_packets || 0}</span>
+          <span className="text-2xl font-bold text-slate-900">{summary?.lost_packets ?? '--'}</span>
         </div>
       </div>
 
@@ -176,7 +183,7 @@ export default function Dashboard() {
               ) : (
                 <tr>
                   <td colSpan={6} className="py-8 text-center text-slate-500">
-                    No records found. Run a simulation to see data here.
+                    {loading ? 'Loading simulations...' : error ? 'Simulation history unavailable.' : 'No records found. Run a simulation to see data here.'}
                   </td>
                 </tr>
               )}

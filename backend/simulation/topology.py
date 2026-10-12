@@ -151,6 +151,8 @@ class NetworkTopology:
             t = link["target"]
             if s in self.disabled_nodes or t in self.disabled_nodes:
                 continue
+            if (s, t) in self.disabled_links or (t, s) in self.disabled_links:
+                continue
             cost = float(link.get("cost", 1))
             latency = float(link.get("latency", 2))
             adj[s].append((t, cost, latency))
@@ -208,12 +210,19 @@ class NetworkTopology:
         path.reverse()
 
         node_details = [self.nodes[n] for n in path]
+        path_links = [next(link for link in self.links if {link["source"], link["target"]} == {s, t})
+                      for s, t in zip(path, path[1:])]
+        survival = 1.0
+        for link in path_links:
+            survival *= 1.0 - link.get("loss_prob", 0)
 
         return {
             "success": True,
             "path": path,
             "node_details": node_details,
             "hops": len(path) - 1,
+            "bandwidth_mbps": min((link["bandwidth"] for link in path_links), default=1000),
+            "packet_loss": round((1.0 - survival) * 100, 2),
             "cost": distances[end],
             "latency": round(latencies[end], 2),
             "message": "Optimal route calculated using Dijkstra's Algorithm."

@@ -49,7 +49,8 @@ SCENARIOS: Dict[str, Dict[str, Any]] = {
             "ttl": 58
         },
         "flags": {
-            "congestion_factor": 0.4,
+            "congestion_factor": 0.1,
+            "propagation_delay_ms": 260.0,
             "loss_override": 1.5,
             "weak_link": False,
             "simulate_drop": False,

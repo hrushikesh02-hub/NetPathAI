@@ -5,14 +5,19 @@ Trains Isolation Forest for anomaly detection and Random Forest Classifier for H
 
 import os
 import json
+import hashlib
 import joblib
 import numpy as np
 from sklearn.ensemble import IsolationForest, RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report, accuracy_score
+from sklearn.metrics import classification_report, accuracy_score, confusion_matrix
+import sklearn
 
-from dataset import generate_network_dataset, FEATURE_COLUMNS
+if __package__:
+    from .dataset import generate_network_dataset, FEATURE_COLUMNS
+else:
+    from dataset import generate_network_dataset, FEATURE_COLUMNS
 
 def train_and_save_models(output_dir: str = None):
     """Generates dataset, trains models, evaluates metrics, and persists artifacts."""
@@ -29,14 +34,14 @@ def train_and_save_models(output_dir: str = None):
     df = generate_network_dataset(num_samples=4000, random_state=42)
     print(f"Dataset generated: {len(df)} records across {df['condition'].nunique()} conditions.")
 
-    X = df[FEATURE_COLUMNS].values
-    y_anomaly = df["anomaly"].values
-    y_health = df["health_class"].values
-
-    # Train/test split
-    X_train, X_test, y_h_train, y_h_test, y_a_train, y_a_test = train_test_split(
-        X, y_health, y_anomaly, test_size=0.2, random_state=42, stratify=y_health
+    # Keep sample IDs so the exported split is exactly the one used by the models.
+    df.insert(0, "sample_id", np.arange(len(df)))
+    train_rows, test_rows = train_test_split(
+        df, test_size=0.2, random_state=42, stratify=df["health_class"]
     )
+    X_train, X_test = (rows[FEATURE_COLUMNS].values for rows in (train_rows, test_rows))
+    y_h_train, y_h_test = (rows["health_class"].values for rows in (train_rows, test_rows))
+    y_a_train, y_a_test = (rows["anomaly"].values for rows in (train_rows, test_rows))
 
     # 1. Feature Scaler
     print("[2/4] Fitting StandardScaler...")
@@ -93,6 +98,21 @@ def train_and_save_models(output_dir: str = None):
     joblib.dump(iso_forest, iso_path)
     joblib.dump(rf_classifier, rf_path)
 
+    dataset_dir = os.path.join(output_dir, "dataset")
+    os.makedirs(dataset_dir, exist_ok=True)
+    train_rows.to_csv(os.path.join(dataset_dir, "train.csv"), index=False)
+    test_rows.to_csv(os.path.join(dataset_dir, "test.csv"), index=False)
+    predictions = test_rows[["sample_id", "condition", "health_class", "anomaly"]].copy()
+    predictions["predicted_health"] = rf_preds
+    predictions["predicted_anomaly"] = iso_binary
+    predictions["health_class_score"] = rf_classifier.predict_proba(X_test).max(axis=1)
+    predictions["anomaly_score"] = iso_forest.decision_function(X_test_scaled)
+    predictions.to_csv(os.path.join(dataset_dir, "test_predictions.csv"), index=False)
+    dataset_files = {}
+    for filename in ("train.csv", "test.csv", "test_predictions.csv"):
+        with open(os.path.join(dataset_dir, filename), "rb") as handle:
+            dataset_files[filename] = {"path": f"dataset/{filename}", "sha256": hashlib.sha256(handle.read()).hexdigest()}
+
     training_meta = {
         "isolation_forest_accuracy": round(float(iso_acc), 4),
         "health_classifier_accuracy": round(float(rf_acc), 4),
@@ -102,6 +122,18 @@ def train_and_save_models(output_dir: str = None):
         "num_testing_samples": len(X_test),
         "status": "trained_successfully"
     }
+    training_meta.update(
+        sklearn_version=sklearn.__version__,
+        data_source="synthetic",
+        evaluation_scope="Held-out samples from the same synthetic generator; not real-world validation.",
+        confidence_calibrated=False,
+        random_seed=42,
+        dataset_files=dataset_files,
+        num_anomaly_training_samples=len(X_train_normal),
+        anomaly_confusion_matrix=confusion_matrix(y_a_test, iso_binary, labels=[0, 1]).tolist(),
+        anomaly_classification_report=classification_report(y_a_test, iso_binary, output_dict=True),
+        health_classification_report=classification_report(y_h_test, rf_preds, output_dict=True),
+    )
 
     with open(metrics_path, "w") as f:
         json.dump(training_meta, f, indent=2)

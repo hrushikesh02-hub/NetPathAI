@@ -6,14 +6,20 @@ Persists simulation journeys, AI classification records, and dashboard metrics.
 import os
 import sqlite3
 import json
+from contextlib import contextmanager
 from typing import Dict, Any, List, Optional
 
-DB_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "netpath_ai.db")
+DB_FILE = os.environ.get("NETPATH_DB_FILE", os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "netpath_ai.db"))
 
-def get_db_connection() -> sqlite3.Connection:
+@contextmanager
+def get_db_connection():
     conn = sqlite3.connect(DB_FILE)
     conn.row_factory = sqlite3.Row
-    return conn
+    try:
+        with conn:
+            yield conn
+    finally:
+        conn.close()
 
 def init_database():
     """Initializes schema for simulation history and telemetry metrics."""
@@ -60,7 +66,7 @@ def save_simulation_record(data: Dict[str, Any]) -> int:
             path_str = " -> ".join(path_str)
             
         cursor.execute("""
-            INSERT OR REPLACE INTO simulation_history (
+            INSERT INTO simulation_history (
                 packet_id, source_ip, destination_ip, protocol, app_protocol,
                 payload, packet_size, latency, packet_loss, throughput,
                 retransmissions, hops, ttl, jitter, status,
@@ -86,7 +92,7 @@ def save_simulation_record(data: Dict[str, Any]) -> int:
             data.get("ai_status", "normal"),
             data.get("ai_health", "HEALTHY"),
             data.get("ai_risk", "low"),
-            float(data.get("ai_confidence", 0.95)),
+            data.get("ai_confidence"),
             data.get("ai_reason", ""),
             data.get("ai_recommendation", ""),
             path_str
@@ -155,15 +161,15 @@ def get_dashboard_summary() -> Dict[str, Any]:
         total = row["total_packets"] or 0
         successful = row["successful_packets"] or 0
         lost = row["lost_packets"] or 0
-        avg_lat = round(row["avg_latency"] or 24.5, 2)
-        avg_loss = round(row["avg_packet_loss"] or 0.2, 2)
-        avg_tp = round(row["avg_throughput"] or 450.0, 2)
+        avg_lat = round(row["avg_latency"], 2) if total else None
+        avg_loss = round(row["avg_packet_loss"], 2) if total else None
+        avg_tp = round(row["avg_throughput"], 2) if total else None
         anomalies = row["anomaly_count"] or 0
 
         # Calculate current network health status
         if total == 0:
-            health = "HEALTHY"
-            health_badge = "emerald"
+            health = "UNKNOWN"
+            health_badge = "slate"
         elif avg_loss > 12.0 or avg_lat > 250.0 or (anomalies / total > 0.4):
             health = "CRITICAL"
             health_badge = "red"

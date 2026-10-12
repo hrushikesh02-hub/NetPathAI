@@ -15,7 +15,12 @@ class NetworkMetricsEngine:
         congestion_factor: float = 0.0,
         loss_override: float = None,
         weak_link: bool = False,
-        base_link_latency: float = 10.0
+        base_link_latency: float = 10.0,
+        bandwidth_mbps: float = 500.0,
+        path_loss: float = 0.0,
+        initial_ttl: int = 64,
+        router_hops: int = 0,
+        force_drop: bool = False
     ) -> Dict[str, Any]:
         """
         Computes realistic, physically grounded network parameters.
@@ -26,15 +31,15 @@ class NetworkMetricsEngine:
         - loss_override: optional forced loss % (e.g. 20.0)
         - weak_link: simulates physical degradation / RF interference
         """
-        hops = max(1, hops)
+        hops = max(0, hops)
         packet_size = max(64, min(9000, packet_size))
         
         # 1. Propagation Delay (per hop ~ 2 - 8 ms)
-        prop_delay = hops * (base_link_latency / 2.0)
+        prop_delay = base_link_latency  # Routing already sums all link latencies.
         
         # 2. Transmission Delay (Size in bits / Bandwidth)
         # Assuming nominal 100-1000 Mbps core links
-        effective_bandwidth_mbps = max(5.0, 500.0 * (1.0 - 0.8 * congestion_factor))
+        effective_bandwidth_mbps = max(5.0, bandwidth_mbps * (1.0 - 0.8 * congestion_factor))
         if weak_link:
             effective_bandwidth_mbps = min(effective_bandwidth_mbps, 15.0)
             
@@ -59,7 +64,7 @@ class NetworkMetricsEngine:
         if loss_override is not None:
             packet_loss = float(loss_override)
         else:
-            base_loss = 0.0
+            base_loss = path_loss
             if weak_link:
                 base_loss += random.uniform(8.0, 22.0)
             if congestion_factor > 0.3:
@@ -67,7 +72,7 @@ class NetworkMetricsEngine:
             packet_loss = round(min(100.0, max(0.0, base_loss)), 2)
 
         # 5. Throughput (Mbps)
-        # Mathis equation approximation: Throughput <= (MSS / RTT) * (C / sqrt(Loss))
+        # Educational throughput heuristic; this is not the Mathis equation.
         if packet_loss >= 100.0:
             throughput = 0.0
         else:
@@ -90,13 +95,13 @@ class NetworkMetricsEngine:
             retransmissions = 0 # UDP does not retransmit
 
         # 7. TTL decrement
-        initial_ttl = 64
-        final_ttl = max(0, initial_ttl - hops)
+        final_ttl = max(0, initial_ttl - router_hops)
 
         # 8. Delivery Status
-        if packet_loss >= 95.0 or (protocol.upper() == "UDP" and packet_loss > 0 and random.random() < (packet_loss / 100.0)):
+        if packet_loss >= 100.0 or (protocol.upper() != "TCP" and (force_drop or random.random() < packet_loss / 100.0)):
             delivery_status = "DROPPED"
-        elif retransmissions > 0 and protocol.upper() == "TCP":
+        elif (force_drop or retransmissions > 0) and protocol.upper() == "TCP":
+            retransmissions = max(1, retransmissions)
             delivery_status = "DELIVERED_WITH_RETRANSMISSION"
         else:
             delivery_status = "DELIVERED"

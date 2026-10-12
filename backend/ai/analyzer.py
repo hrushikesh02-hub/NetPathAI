@@ -1,242 +1,137 @@
-"""
-AI Inference, Anomaly Detection, and Natural Language Explanation Engine for NetPath AI.
-Includes trained Scikit-learn models and robust Rule-Based Fallback.
-"""
-
-import os
+"""Synthetic-model inference with evidence-based, explicitly heuristic advice."""
 import json
-from typing import Dict, Any, Optional
+import logging
+import os
+from validation import number
 
-FEATURE_KEYS = [
-    "packet_size",
-    "latency",
-    "packet_loss",
-    "throughput",
-    "retransmissions",
-    "hops",
-    "ttl",
-    "jitter"
-]
+FEATURE_KEYS = ["packet_size", "latency", "packet_loss", "throughput",
+                "retransmissions", "hops", "ttl", "jitter"]
+FEATURE_LIMITS = {
+    "packet_size": (64, 9000, True), "latency": (0, 1e9, False),
+    "packet_loss": (0, 100, False), "throughput": (0, 1e9, False),
+    "retransmissions": (0, 1000000, True), "hops": (0, 255, True),
+    "ttl": (0, 255, True), "jitter": (0, 1e9, False),
+}
+HEALTH_ORDER = {"HEALTHY": 0, "WARNING": 1, "CRITICAL": 2}
+
 
 class NetworkAIAnalyzer:
-    def __init__(self, models_dir: Optional[str] = None):
-        if models_dir is None:
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            models_dir = os.path.join(os.path.dirname(current_dir), "models")
-        
-        self.models_dir = models_dir
-        self.scaler = None
-        self.iso_forest = None
-        self.health_classifier = None
+    def __init__(self, models_dir=None):
+        self.models_dir = models_dir or os.path.join(os.path.dirname(os.path.dirname(__file__)), "models")
+        self.scaler = self.iso_forest = self.health_classifier = None
         self.is_ml_active = False
+        self.model_error = None
         self.load_models()
 
     def load_models(self):
-        """Attempts to load trained joblib models. Falls back cleanly on failure."""
+        self.is_ml_active = False
         try:
             import joblib
-            scaler_p = os.path.join(self.models_dir, "scaler.joblib")
-            iso_p = os.path.join(self.models_dir, "isolation_forest.joblib")
-            rf_p = os.path.join(self.models_dir, "health_classifier.joblib")
+            import warnings
+            from sklearn.exceptions import InconsistentVersionWarning
+            with warnings.catch_warnings():
+                warnings.simplefilter("error", InconsistentVersionWarning)
+                self.scaler = joblib.load(os.path.join(self.models_dir, "scaler.joblib"))
+                self.iso_forest = joblib.load(os.path.join(self.models_dir, "isolation_forest.joblib"))
+                self.health_classifier = joblib.load(os.path.join(self.models_dir, "health_classifier.joblib"))
+            for model in (self.scaler, self.iso_forest, self.health_classifier):
+                if model.n_features_in_ != len(FEATURE_KEYS):
+                    raise ValueError("Model feature count does not match telemetry schema")
+            with open(os.path.join(self.models_dir, "training_metrics.json"), encoding="utf-8") as handle:
+                metadata = json.load(handle)
+            if metadata.get("feature_columns") != FEATURE_KEYS:
+                raise ValueError("Model feature order does not match telemetry schema")
+            if set(self.health_classifier.classes_) != set(HEALTH_ORDER):
+                raise ValueError("Model health classes do not match telemetry schema")
+            self.is_ml_active = True
+            self.model_error = None
+        except Exception as exc:
+            self.model_error = type(exc).__name__
+            logging.warning("ML unavailable; using rules: %s", exc)
 
-            if os.path.exists(scaler_p) and os.path.exists(iso_p) and os.path.exists(rf_p):
-                self.scaler = joblib.load(scaler_p)
-                self.iso_forest = joblib.load(iso_p)
-                self.health_classifier = joblib.load(rf_p)
-                self.is_ml_active = True
-                print("NetPath AI: Machine Learning models loaded successfully.")
-            else:
-                print("NetPath AI: Trained model files not found. Using Rule-Based Fallback Engine.")
-                self.is_ml_active = False
-        except Exception as e:
-            print(f"NetPath AI: Failed to load ML models ({e}). Using Rule-Based Fallback Engine.")
-            self.is_ml_active = False
+    @staticmethod
+    def rule_findings(f):
+        """Thresholds are simulator policy, not proven root causes."""
+        findings = []
+        def add(metric, severity, observation, advice):
+            findings.append({"metric": metric, "value": f[metric], "severity": severity,
+                             "observation": observation, "recommendation": advice})
+        if f["ttl"] == 0:
+            add("ttl", "CRITICAL", "TTL is exhausted (0).", "Check the initial TTL and forwarding path; the packet cannot be forwarded with TTL 0.")
+        if f["packet_loss"] >= 2:
+            add("packet_loss", "CRITICAL" if f["packet_loss"] >= 15 else "WARNING",
+                f"Packet loss is {f['packet_loss']:.1f}%.", "Compare this sample with Normal Baseline. Run Packet Loss & TCP Retransmission to observe how TCP recovers from simulated loss.")
+        if f["latency"] >= 150:
+            add("latency", "CRITICAL" if f["latency"] >= 350 else "WARNING",
+                f"Latency is {f['latency']:.1f} ms.", "Compare High Latency and Severe Network Congestion with Normal Baseline to distinguish simulated propagation delay from queueing delay.")
+        if f["throughput"] < 80:
+            add("throughput", "CRITICAL" if f["throughput"] < 20 else "WARNING",
+                f"Throughput is {f['throughput']:.1f} Mbps.", "Compare with Normal Baseline and inspect the selected route's link capacity. Use Weak Link and Congestion presets to explore why simulated throughput falls.")
+        if f["retransmissions"] >= 1:
+            add("retransmissions", "CRITICAL" if f["retransmissions"] >= 6 else "WARNING",
+                f"The telemetry reports {f['retransmissions']} TCP retransmission(s).", "Use the Packet Loss and Excessive TCP Retransmission presets to compare retry counts and delivery outcomes.")
+        if f["jitter"] >= 20:
+            add("jitter", "WARNING", f"Jitter is {f['jitter']:.1f} ms.", "Repeat the same preset and compare its delay variation with Normal Baseline, then compare Congestion and Weak Link.")
+        return findings
 
-    def generate_explanation(
-        self,
-        features: Dict[str, Any],
-        is_anomaly: bool,
-        health_class: str,
-        risk_level: str
-    ) -> Dict[str, str]:
-        """Generates dynamic, human-understandable root-cause diagnosis and actionable recommendations."""
-        lat = float(features.get("latency", 0))
-        loss = float(features.get("packet_loss", 0))
-        tp = float(features.get("throughput", 0))
-        retx = int(features.get("retransmissions", 0))
-        jitter = float(features.get("jitter", 0))
-        hops = int(features.get("hops", 0))
-
-        reasons = []
-        possible_causes = []
-        recommendations = []
-
-        if health_class == "HEALTHY" and not is_anomaly:
-            return {
-                "reason": f"The network is running smoothly with low delay ({lat:.1f} ms), almost no lost packets ({loss:.1f}%), and no need to resend data.",
-                "possible_cause": "All routers and cables are working well and are not overloaded.",
-                "recommendation": "Everything looks good! Keep monitoring the network as usual."
-            }
-
-        # Identify Specific Bottlenecks
-        if loss >= 15.0:
-            reasons.append(f"Too many packets are being lost ({loss:.1f}%) along the way.")
-            possible_causes.append("A router might be overloaded, a cable might be damaged, or there is interference.")
-            recommendations.append("Check the cables and make sure the routers aren't too busy.")
-
-        if lat >= 250.0:
-            reasons.append(f"It's taking a long time for data to travel ({lat:.1f} ms delay).")
-            possible_causes.append("The path might be too long, or traffic is getting stuck in a traffic jam at a router.")
-            recommendations.append("Try finding a shorter path or upgrading the router to handle more traffic.")
-
-        if retx >= 4:
-            reasons.append(f"Data had to be resent multiple times ({retx} times) because it didn't arrive.")
-            possible_causes.append("Packets are getting lost on the way, or connections are unstable.")
-            recommendations.append("Check for bad cables or Wi-Fi interference between the devices.")
-
-        if tp <= 35.0 and tp > 0.0:
-            reasons.append(f"The network speed is very slow ({tp:.1f} Mbps).")
-            possible_causes.append("The network is crowded with too much traffic.")
-            recommendations.append("Limit unnecessary downloads to free up space for important traffic.")
-
-        if hops >= 7:
-            reasons.append(f"The data is taking too many steps ({hops} jumps) to reach its destination.")
-            possible_causes.append("The route chosen is not the most direct one.")
-            recommendations.append("Check the routing settings to find a more direct path.")
-
-        # Default fallback text if specific conditions weren't flagged
-        if not reasons:
-            reasons.append("The network behavior is unusual compared to normal.")
-            possible_causes.append("There might be a sudden spike in traffic or a temporary glitch.")
-            recommendations.append("Keep an eye on the network to see if it happens again.")
-
-        return {
-            "reason": " ".join(reasons),
-            "possible_cause": " ".join(possible_causes),
-            "recommendation": " ".join(recommendations)
-        }
-
-    def analyze_metrics(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Executes inference on incoming telemetry features.
-        Accepts:
-          - packet_size, latency, packet_loss, throughput, retransmissions, hops, ttl, jitter
-        Returns:
-          - status: 'anomaly' | 'normal'
-          - health_status: 'HEALTHY' | 'WARNING' | 'CRITICAL'
-          - risk_level: 'low' | 'moderate' | 'high' | 'critical'
-          - confidence: float (0.0 - 1.0)
-          - reason, possible_cause, recommendation
-          - model_source: 'IsolationForest + RandomForest' | 'Fallback Rule Engine'
-        """
-        # Extract features with safe defaults
-        features = {
-            "packet_size": float(data.get("packet_size", 1024)),
-            "latency": float(data.get("latency", 25.0)),
-            "packet_loss": float(data.get("packet_loss", 0.0)),
-            "throughput": float(data.get("throughput", 500.0)),
-            "retransmissions": int(data.get("retransmissions", 0)),
-            "hops": int(data.get("hops", 3)),
-            "ttl": int(data.get("ttl", 61)),
-            "jitter": float(data.get("jitter", 2.0))
-        }
-
-        # Try ML Inference if active
-        if self.is_ml_active and self.iso_forest and self.health_classifier and self.scaler:
+    def analyze_metrics(self, data):
+        if not isinstance(data, dict):
+            raise ValueError("Telemetry must be a JSON object.")
+        missing = [key for key in FEATURE_KEYS if key not in data]
+        if missing:
+            raise ValueError("Missing telemetry: " + ", ".join(missing))
+        features = {key: number(data[key], key, *FEATURE_LIMITS[key]) for key in FEATURE_KEYS}
+        findings = self.rule_findings(features)
+        if str(data.get("status", "")).startswith("DROPPED"):
+            findings.append({"metric": "status", "value": data["status"], "severity": "CRITICAL",
+                             "observation": f"The simulation reports {data['status']} for this packet.",
+                             "recommendation": "Inspect the journey's drop event and fault settings; this packet did not reach its destination."})
+        rule_health = max((item["severity"] for item in findings), key=HEALTH_ORDER.get, default="HEALTHY")
+        model_health = None
+        health_score = anomaly_score = None
+        model_anomaly = None
+        if self.is_ml_active:
             try:
                 import numpy as np
-                feature_vector = np.array([[features[k] for k in FEATURE_KEYS]])
-                feature_vector_scaled = self.scaler.transform(feature_vector)
-
-                # Isolation Forest Anomaly Detection
-                raw_score = self.iso_forest.decision_function(feature_vector_scaled)[0]
-                iso_pred = self.iso_forest.predict(feature_vector_scaled)[0]
-                is_anomaly = bool(iso_pred == -1)
-
-                # Convert decision score to confidence percentage
-                # Decision function: negative -> anomalous, positive -> normal
-                if is_anomaly:
-                    confidence = min(0.99, max(0.70, 0.70 + abs(raw_score) * 1.2))
-                else:
-                    confidence = min(0.99, max(0.75, 0.75 + raw_score * 0.8))
-
-                # Health Classifier
-                health_pred = self.health_classifier.predict(feature_vector)[0]
-                health_probs = self.health_classifier.predict_proba(feature_vector)[0]
-                max_prob = float(np.max(health_probs))
-                health_confidence = round(max_prob, 2)
-
-                # Determine Risk Level
-                if health_pred == "CRITICAL" or (is_anomaly and features["packet_loss"] > 10.0):
-                    risk_level = "critical" if features["packet_loss"] > 20.0 or features["latency"] > 400.0 else "high"
-                elif health_pred == "WARNING" or is_anomaly:
-                    risk_level = "moderate"
-                else:
-                    risk_level = "low"
-
-                explanation = self.generate_explanation(features, is_anomaly, health_pred, risk_level)
-
-                return {
-                    "status": "anomaly" if is_anomaly else "normal",
-                    "is_anomaly": is_anomaly,
-                    "health_status": health_pred,
-                    "risk_level": risk_level,
-                    "confidence": round(float(confidence), 2),
-                    "health_confidence": health_confidence,
-                    "reason": explanation["reason"],
-                    "possible_cause": explanation["possible_cause"],
-                    "recommendation": explanation["recommendation"],
-                    "model_source": "Machine Learning (Isolation Forest & Random Forest)",
-                    "is_fallback": False,
-                    "features_analyzed": features
-                }
-            except Exception as e:
-                print(f"ML Inference error ({e}), falling back to heuristic engine.")
-
-        # =========================================================================
-        # Robust Rule-Based Fallback Engine (Zero dependencies, guaranteed execution)
-        # =========================================================================
-        lat = features["latency"]
-        loss = features["packet_loss"]
-        tp = features["throughput"]
-        retx = features["retransmissions"]
-        jit = features["jitter"]
-
-        is_anomaly = False
-        health_pred = "HEALTHY"
-        risk_level = "low"
-        confidence = 0.90
-
-        if loss >= 15.0 or lat >= 350.0 or retx >= 6 or (tp < 20.0 and tp > 0):
-            is_anomaly = True
-            health_pred = "CRITICAL"
-            risk_level = "critical" if loss >= 25.0 or lat >= 450.0 else "high"
-            confidence = 0.94
-        elif loss >= 2.0 or lat >= 150.0 or retx >= 1 or jit >= 20.0 or tp < 80.0:
-            is_anomaly = True
-            health_pred = "WARNING"
-            risk_level = "moderate"
-            confidence = 0.88
-        else:
-            is_anomaly = False
-            health_pred = "HEALTHY"
-            risk_level = "low"
-            confidence = 0.95
-
-        explanation = self.generate_explanation(features, is_anomaly, health_pred, risk_level)
-
+                vector = np.array([[features[key] for key in FEATURE_KEYS]])
+                scaled = self.scaler.transform(vector)
+                anomaly_score = float(self.iso_forest.decision_function(scaled)[0])
+                model_anomaly = bool(self.iso_forest.predict(scaled)[0] == -1)
+                model_health = str(self.health_classifier.predict(vector)[0])
+                health_score = float(max(self.health_classifier.predict_proba(vector)[0]))
+            except Exception as exc:
+                logging.exception("ML inference failed; using rules")
+                self.is_ml_active = False
+                self.model_error = type(exc).__name__
+                model_health = model_anomaly = health_score = anomaly_score = None
+        health = max((rule_health, model_health or "HEALTHY"), key=HEALTH_ORDER.get)
+        is_anomaly = bool(model_anomaly or health != "HEALTHY")
+        risk = ("critical" if features["ttl"] == 0 or features["packet_loss"] >= 25 or features["latency"] >= 450 or features["throughput"] == 0
+                else "high") if health == "CRITICAL" else "moderate" if is_anomaly else "low"
+        reasons = [item["observation"] for item in findings]
+        recommendations = [item["recommendation"] for item in findings]
+        if not reasons:
+            if is_anomaly:
+                reasons.append("The synthetic-trained model flags an unusual feature combination; no configured metric threshold is exceeded.")
+                recommendations.append("Compare this feature combination with the saved normal dataset samples. An outlier can differ from the training baseline without exceeding a warning threshold.")
+            else:
+                reasons.append(f"No configured warning thresholds are exceeded: latency {features['latency']:.1f} ms, loss {features['packet_loss']:.1f}%, retransmissions {features['retransmissions']}.")
+                recommendations.append("Use this sample as a baseline, then run a fault preset to compare the metrics and model predictions.")
         return {
-            "status": "anomaly" if is_anomaly else "normal",
-            "is_anomaly": is_anomaly,
-            "health_status": health_pred,
-            "risk_level": risk_level,
-            "confidence": confidence,
-            "health_confidence": confidence,
-            "reason": explanation["reason"],
-            "possible_cause": explanation["possible_cause"],
-            "recommendation": explanation["recommendation"],
-            "model_source": "Fallback Network Rule Analyzer",
-            "is_fallback": True,
-            "fallback_message": "AI service unavailable — fallback network rule analyzer is active.",
-            "features_analyzed": features
+            "status": "anomaly" if is_anomaly else "normal", "is_anomaly": is_anomaly,
+            "health_status": health, "risk_level": risk,
+            "confidence": None, "health_confidence": health_score,
+            "confidence_kind": "uncalibrated_model_class_score" if model_health else "not_available",
+            "model_health_status": model_health, "model_is_anomaly": model_anomaly,
+            "anomaly_score": anomaly_score, "rule_health_status": rule_health,
+            "rule_override": model_health is not None and HEALTH_ORDER[rule_health] > HEALTH_ORDER[model_health],
+            "reason": " ".join(reasons),
+            "possible_cause": "Telemetry alone cannot establish a root cause. In this simulator, scenario settings and the modeled route generate the measurements.",
+            "recommendation": " ".join(recommendations), "evidence": findings,
+            "model_source": "Isolation Forest + Random Forest with rule safeguards" if model_health else "Fallback Network Rule Analyzer",
+            "explanation_source": "metric_threshold_rules", "training_data_source": "synthetic",
+            "limitations": "Dataset-trained classification with metric-based suggestions. Model class scores are uncalibrated; they are not the probability that a suggestion is correct.",
+            "is_fallback": model_health is None,
+            "fallback_message": "ML models unavailable or incompatible; metric rules are active." if model_health is None else None,
+            "features_analyzed": features,
         }

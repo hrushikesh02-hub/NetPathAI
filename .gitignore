@@ -23,12 +23,15 @@ wheels/
 .installed.cfg
 *.egg
 .pytest_cache/
+.audit-deps/
 *.db
 *.sqlite3
 
 # Environment variables & secrets
 .env
 .env.*
+*.env
+*.env.*
 
 # Node
 node_modules/

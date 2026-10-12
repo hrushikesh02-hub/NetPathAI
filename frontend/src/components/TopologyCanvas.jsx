@@ -290,8 +290,10 @@ export default function TopologyCanvas({
             </div>
 
             {onToggleNode && (
+
               <button
                 onClick={() => {
+                  if (isSimulating) return;
                   const currentlyDisabled = disabledNodes.includes(selectedNode.id);
                   onToggleNode(selectedNode.id, currentlyDisabled);
                 }}
@@ -334,7 +336,7 @@ export default function TopologyCanvas({
                 </React.Fragment>
               ))
             ) : (
-              <span className="text-red-500">No route available (Network Partitioned)</span>
+              <span className="text-red-500">Run a simulation to calculate a route</span>
             )}
           </div>
         </div>

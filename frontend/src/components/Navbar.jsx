@@ -104,7 +104,7 @@ export default function Navbar() {
                     : 'bg-amber-500 animate-pulse'
                 }`} />
                 <span className="text-xs font-medium text-slate-700">
-                  {backendHealth.status === 'healthy' ? 'System Ready' : 'Connecting...'}
+                  {backendHealth.status === 'healthy' ? (backendHealth.ml_model_active ? 'ML Ready' : 'Rules Active') : backendHealth.status === 'offline' ? 'Backend Offline' : 'Connecting...'}
                 </span>
               </div>
             </div>

@@ -24,7 +24,9 @@ def generate_network_dataset(num_samples: int = 3000, random_state: int = 42) ->
       - health_class: 0 (HEALTHY), 1 (WARNING), 2 (CRITICAL)
       - condition: 'NORMAL', 'HIGH_LATENCY', 'PACKET_LOSS', 'CONGESTION', 'HIGH_RETRANSMISSION', 'WEAK_LINK'
     """
-    np.random.seed(random_state)
+    if isinstance(num_samples, bool) or not isinstance(num_samples, int) or num_samples < 1:
+        raise ValueError("num_samples must be a positive integer")
+    rng = np.random.RandomState(random_state)
     records = []
 
     # Distribution split:
@@ -38,16 +40,18 @@ def generate_network_dataset(num_samples: int = 3000, random_state: int = 42) ->
         "WEAK_LINK": int(num_samples * 0.05)
     }
 
+    counts["NORMAL"] += num_samples - sum(counts.values())
+
     # 1. NORMAL SAMPLES (HEALTHY)
     for _ in range(counts["NORMAL"]):
-        pkt_size = int(np.random.choice([64, 128, 512, 1024, 1420, 1500]))
-        hops = int(np.random.randint(2, 6))
-        latency = float(np.random.uniform(8.0, 45.0) + hops * 2.5)
-        loss = float(np.random.uniform(0.0, 0.5))
-        throughput = float(np.random.uniform(250.0, 950.0))
-        retransmissions = 0 if np.random.random() > 0.05 else 1
+        pkt_size = int(rng.choice([64, 128, 512, 1024, 1420, 1500]))
+        hops = int(rng.randint(2, 6))
+        latency = float(rng.uniform(8.0, 45.0) + hops * 2.5)
+        loss = float(rng.uniform(0.0, 0.5))
+        throughput = float(rng.uniform(250.0, 950.0))
+        retransmissions = 0 if rng.random() > 0.05 else 1
         ttl = int(64 - hops)
-        jitter = float(np.random.uniform(0.5, 4.0))
+        jitter = float(rng.uniform(0.5, 4.0))
 
         records.append({
             "packet_size": pkt_size,
@@ -65,14 +69,14 @@ def generate_network_dataset(num_samples: int = 3000, random_state: int = 42) ->
 
     # 2. HIGH LATENCY SAMPLES (WARNING)
     for _ in range(counts["HIGH_LATENCY"]):
-        pkt_size = int(np.random.choice([256, 512, 1024, 1420]))
-        hops = int(np.random.randint(4, 9))
-        latency = float(np.random.uniform(180.0, 420.0))
-        loss = float(np.random.uniform(0.5, 3.5))
-        throughput = float(np.random.uniform(80.0, 220.0))
-        retransmissions = int(np.random.choice([0, 1, 2]))
+        pkt_size = int(rng.choice([256, 512, 1024, 1420]))
+        hops = int(rng.randint(4, 9))
+        latency = float(rng.uniform(180.0, 420.0))
+        loss = float(rng.uniform(0.5, 3.5))
+        throughput = float(rng.uniform(80.0, 220.0))
+        retransmissions = int(rng.choice([0, 1, 2]))
         ttl = int(64 - hops)
-        jitter = float(np.random.uniform(20.0, 65.0))
+        jitter = float(rng.uniform(20.0, 65.0))
 
         records.append({
             "packet_size": pkt_size,
@@ -90,14 +94,14 @@ def generate_network_dataset(num_samples: int = 3000, random_state: int = 42) ->
 
     # 3. PACKET LOSS SAMPLES (CRITICAL)
     for _ in range(counts["PACKET_LOSS"]):
-        pkt_size = int(np.random.choice([512, 1024, 1400, 1500]))
-        hops = int(np.random.randint(3, 7))
-        latency = float(np.random.uniform(60.0, 180.0))
-        loss = float(np.random.uniform(12.0, 40.0))
-        throughput = float(np.random.uniform(10.0, 70.0))
-        retransmissions = int(np.random.randint(3, 10))
+        pkt_size = int(rng.choice([512, 1024, 1400, 1500]))
+        hops = int(rng.randint(3, 7))
+        latency = float(rng.uniform(60.0, 180.0))
+        loss = float(rng.uniform(12.0, 40.0))
+        throughput = float(rng.uniform(10.0, 70.0))
+        retransmissions = int(rng.randint(3, 10))
         ttl = int(64 - hops)
-        jitter = float(np.random.uniform(15.0, 50.0))
+        jitter = float(rng.uniform(15.0, 50.0))
 
         records.append({
             "packet_size": pkt_size,
@@ -115,14 +119,14 @@ def generate_network_dataset(num_samples: int = 3000, random_state: int = 42) ->
 
     # 4. CONGESTION SAMPLES (CRITICAL)
     for _ in range(counts["CONGESTION"]):
-        pkt_size = int(np.random.choice([1024, 1400, 1500]))
-        hops = int(np.random.randint(3, 8))
-        latency = float(np.random.uniform(280.0, 650.0))
-        loss = float(np.random.uniform(15.0, 35.0))
-        throughput = float(np.random.uniform(5.0, 45.0))
-        retransmissions = int(np.random.randint(6, 18))
+        pkt_size = int(rng.choice([1024, 1400, 1500]))
+        hops = int(rng.randint(3, 8))
+        latency = float(rng.uniform(280.0, 650.0))
+        loss = float(rng.uniform(15.0, 35.0))
+        throughput = float(rng.uniform(5.0, 45.0))
+        retransmissions = int(rng.randint(6, 18))
         ttl = int(64 - hops)
-        jitter = float(np.random.uniform(45.0, 120.0))
+        jitter = float(rng.uniform(45.0, 120.0))
 
         records.append({
             "packet_size": pkt_size,
@@ -140,14 +144,14 @@ def generate_network_dataset(num_samples: int = 3000, random_state: int = 42) ->
 
     # 5. HIGH RETRANSMISSION SAMPLES (WARNING / CRITICAL)
     for _ in range(counts["HIGH_RETRANSMISSION"]):
-        pkt_size = int(np.random.choice([512, 1024, 1420]))
-        hops = int(np.random.randint(2, 6))
-        latency = float(np.random.uniform(90.0, 240.0))
-        loss = float(np.random.uniform(8.0, 25.0))
-        throughput = float(np.random.uniform(20.0, 80.0))
-        retransmissions = int(np.random.randint(8, 22))
+        pkt_size = int(rng.choice([512, 1024, 1420]))
+        hops = int(rng.randint(2, 6))
+        latency = float(rng.uniform(90.0, 240.0))
+        loss = float(rng.uniform(8.0, 25.0))
+        throughput = float(rng.uniform(20.0, 80.0))
+        retransmissions = int(rng.randint(8, 22))
         ttl = int(64 - hops)
-        jitter = float(np.random.uniform(10.0, 40.0))
+        jitter = float(rng.uniform(10.0, 40.0))
 
         records.append({
             "packet_size": pkt_size,
@@ -165,14 +169,14 @@ def generate_network_dataset(num_samples: int = 3000, random_state: int = 42) ->
 
     # 6. WEAK LINK SAMPLES (WARNING)
     for _ in range(counts["WEAK_LINK"]):
-        pkt_size = int(np.random.choice([128, 512, 1024]))
-        hops = int(np.random.randint(2, 5))
-        latency = float(np.random.uniform(70.0, 190.0))
-        loss = float(np.random.uniform(5.0, 15.0))
-        throughput = float(np.random.uniform(30.0, 110.0))
-        retransmissions = int(np.random.randint(2, 6))
+        pkt_size = int(rng.choice([128, 512, 1024]))
+        hops = int(rng.randint(2, 5))
+        latency = float(rng.uniform(70.0, 190.0))
+        loss = float(rng.uniform(5.0, 15.0))
+        throughput = float(rng.uniform(30.0, 110.0))
+        retransmissions = int(rng.randint(2, 6))
         ttl = int(64 - hops)
-        jitter = float(np.random.uniform(25.0, 75.0))
+        jitter = float(rng.uniform(25.0, 75.0))
 
         records.append({
             "packet_size": pkt_size,

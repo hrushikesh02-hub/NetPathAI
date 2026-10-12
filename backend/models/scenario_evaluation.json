@@ -1,0 +1,83 @@
+{
+  "scope": "Seeded simulator smoke check; no real-network validation or calibrated confidence.",
+  "seed": 42,
+  "scenarios": {
+    "NORMAL": {
+      "runs": 30,
+      "model_anomalies": 0,
+      "model_health": {
+        "HEALTHY": 30
+      },
+      "final_health": {
+        "HEALTHY": 30
+      },
+      "fallback_runs": 0
+    },
+    "HIGH_LATENCY": {
+      "runs": 30,
+      "model_anomalies": 30,
+      "model_health": {
+        "WARNING": 30
+      },
+      "final_health": {
+        "WARNING": 30
+      },
+      "fallback_runs": 0
+    },
+    "PACKET_LOSS": {
+      "runs": 30,
+      "model_anomalies": 30,
+      "model_health": {
+        "CRITICAL": 30
+      },
+      "final_health": {
+        "CRITICAL": 30
+      },
+      "fallback_runs": 0
+    },
+    "CONGESTION": {
+      "runs": 30,
+      "model_anomalies": 30,
+      "model_health": {
+        "CRITICAL": 30
+      },
+      "final_health": {
+        "CRITICAL": 30
+      },
+      "fallback_runs": 0
+    },
+    "ROUTER_FAILURE": {
+      "runs": 30,
+      "model_anomalies": 30,
+      "model_health": {
+        "WARNING": 30
+      },
+      "final_health": {
+        "WARNING": 30
+      },
+      "fallback_runs": 0
+    },
+    "HIGH_RETRANSMISSION": {
+      "runs": 30,
+      "model_anomalies": 30,
+      "model_health": {
+        "CRITICAL": 30
+      },
+      "final_health": {
+        "CRITICAL": 30
+      },
+      "fallback_runs": 0
+    },
+    "WEAK_LINK": {
+      "runs": 30,
+      "model_anomalies": 30,
+      "model_health": {
+        "WARNING": 30
+      },
+      "final_health": {
+        "CRITICAL": 30
+      },
+      "fallback_runs": 0
+    }
+  }
+}

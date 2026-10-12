@@ -4,67 +4,53 @@ Coordinates Packet validation, OSI Layer transitions, Topology trajectory,
 Packet Drop/Loss Simulation, and Retransmission cycles.
 """
 
-import re
 import uuid
-from typing import Dict, Any, List, Optional
+from ipaddress import IPv4Address
+from validation import number, scenario_flags as validate_flags
+from typing import Dict, Any, List, Optional, Tuple
 from .topology import NetworkTopology
 from .encapsulation import EncapsulationEngine
 from .metrics import NetworkMetricsEngine
-
-IP_REGEX = r"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
-MAC_REGEX = r"^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$"
 
 class PacketEngine:
     def __init__(self, topology: Optional[NetworkTopology] = None):
         self.topology = topology or NetworkTopology()
 
     @staticmethod
-    def validate_packet_input(data: Dict[str, Any]) -> Tuple_Result:
+    def validate_packet_input(data: Dict[str, Any]) -> Tuple[bool, Dict[str, str]]:
         """Validates all input packet fields, returns (is_valid, errors_dict)."""
         errors = {}
-        src_ip = data.get("source_ip", "")
-        dst_ip = data.get("destination_ip", "")
-        src_port = data.get("source_port", 5000)
-        dst_port = data.get("destination_port", 80)
-        packet_size = data.get("packet_size", 1024)
-        ttl = data.get("ttl", 64)
-
-        if not src_ip or not re.match(IP_REGEX, str(src_ip).strip()):
-            errors["source_ip"] = "Invalid Source IPv4 Address format (e.g. 192.168.1.10)."
-        if not dst_ip or not re.match(IP_REGEX, str(dst_ip).strip()):
-            errors["destination_ip"] = "Invalid Destination IPv4 Address format (e.g. 192.168.2.20)."
-        
-        try:
-            p_src = int(src_port)
-            if not (1 <= p_src <= 65535):
-                errors["source_port"] = "Source Port must be between 1 and 65535."
-        except (ValueError, TypeError):
-            errors["source_port"] = "Source Port must be an integer."
-
-        try:
-            p_dst = int(dst_port)
-            if not (1 <= p_dst <= 65535):
-                errors["destination_port"] = "Destination Port must be between 1 and 65535."
-        except (ValueError, TypeError):
-            errors["destination_port"] = "Destination Port must be an integer."
-
-        try:
-            psize = int(packet_size)
-            if not (64 <= psize <= 9000):
-                errors["packet_size"] = "Packet size must be between 64 bytes and 9000 bytes (Jumbo frame limit)."
-        except (ValueError, TypeError):
-            errors["packet_size"] = "Packet size must be an integer."
-
-        try:
-            pttl = int(ttl)
-            if not (1 <= pttl <= 255):
-                errors["ttl"] = "TTL must be between 1 and 255."
-        except (ValueError, TypeError):
-            errors["ttl"] = "TTL must be an integer."
-
-        if not data.get("payload", "").strip():
+        if not isinstance(data, dict):
+            return False, {"body": "Expected a JSON object."}
+        for key in ("source_ip", "destination_ip"):
+            try:
+                if not isinstance(data.get(key), str):
+                    raise ValueError()
+                IPv4Address(data[key])
+            except (ValueError, TypeError):
+                errors[key] = "A valid IPv4 address is required."
+        for key, default, low, high in (("source_port", 5000, 1, 65535), ("destination_port", 80, 1, 65535),
+                                       ("packet_size", 1024, 64, 9000), ("ttl", 64, 1, 255)):
+            try:
+                data[key] = number(data.get(key, default), key, low, high, integer=True)
+            except ValueError as exc:
+                errors[key] = str(exc)
+        if not isinstance(data.get("payload"), str) or not data["payload"].strip():
             errors["payload"] = "Payload / message cannot be empty."
-
+        protocol = data.get("protocol", "TCP")
+        if not isinstance(protocol, str) or protocol.upper() not in ("TCP", "UDP", "ICMP"):
+            errors["protocol"] = "Protocol must be TCP, UDP or ICMP."
+        else:
+            data["protocol"] = protocol.upper()
+        if not isinstance(data.get("app_protocol", "HTTP"), str):
+            errors["app_protocol"] = "Application protocol must be a string."
+        for key in ("source_node", "destination_node"):
+            if key in data and not isinstance(data[key], str):
+                errors[key] = "Node ID must be a string."
+        try:
+            validate_flags(data.get("scenario_flags", {}))
+        except ValueError as exc:
+            errors["scenario_flags"] = str(exc)
         return len(errors) == 0, errors
 
     def simulate_journey(
@@ -80,11 +66,18 @@ class PacketEngine:
         3. Potential Packet Drop / Retransmission events
         4. Decapsulation ascending L1 -> L7 at Destination
         """
-        flags = scenario_flags or {}
-        packet_id = packet_data.get("packet_id") or f"PKT-{uuid.uuid4().hex[:6].upper()}"
+        flags = validate_flags(scenario_flags or {})
+        packet_data = dict(packet_data)
+        packet_id = f"PKT-{uuid.uuid4().hex.upper()}"
         
-        src_node = packet_data.get("source_node", "PC1")
-        dst_node = packet_data.get("destination_node", "Server1")
+        by_ip = {node["ip"]: key for key, node in self.topology.nodes.items()}
+        src_node = packet_data.get("source_node", by_ip.get(packet_data.get("source_ip")))
+        dst_node = packet_data.get("destination_node", by_ip.get(packet_data.get("destination_ip")))
+        for key, node in (("source", src_node), ("destination", dst_node)):
+            if node not in self.topology.nodes or self.topology.nodes[node]["ip"] != packet_data.get(f"{key}_ip"):
+                return {"success": False, "error": f"{key} IP and node must identify the same topology device."}
+            packet_data[f"{key}_node"] = node
+        packet_data["source_mac"] = self.topology.nodes[src_node]["mac"]
 
         # 1. Routing via Dijkstra
         routing_result = self.topology.find_shortest_path(src_node, dst_node)
@@ -99,6 +92,7 @@ class PacketEngine:
 
         path_nodes = routing_result["path"]
         hops = len(path_nodes) - 1
+        packet_data["destination_mac"] = self.topology.nodes[path_nodes[min(1, hops)]]["mac"]
 
         # 2. Encapsulation & Decapsulation data
         encapsulation_data = EncapsulationEngine.generate_layers(packet_data)
@@ -116,7 +110,12 @@ class PacketEngine:
             congestion_factor=congestion_factor,
             loss_override=loss_override,
             weak_link=weak_link,
-            base_link_latency=routing_result["latency"]
+            base_link_latency=routing_result["latency"] + flags.get("propagation_delay_ms", 0),
+            bandwidth_mbps=routing_result["bandwidth_mbps"],
+            path_loss=routing_result["packet_loss"],
+            initial_ttl=int(packet_data.get("ttl", 64)),
+            router_hops=sum(self.topology.nodes[n]["type"] == "router" for n in path_nodes[1:-1]),
+            force_drop=flags.get("simulate_drop", False)
         )
 
         # 4. Trajectory Step Generation for UI Animation
@@ -138,14 +137,25 @@ class PacketEngine:
             step_idx += 1
 
         # Phase B: Physical Network Node Hops
-        simulate_drop = flags.get("simulate_drop", False) or (metrics["packet_loss"] >= 20.0 and random_boolean(0.85))
-        drop_hop_index = len(path_nodes) // 2 if len(path_nodes) > 2 else 1
+        simulate_drop = metrics["status"] == "DROPPED" or metrics["retransmissions"] > 0
+        drop_hop_index = min(len(path_nodes) // 2, max(0, hops - 1))
+        remaining_ttl = int(packet_data.get("ttl", 64))
+        traversed_path = [src_node]
 
         for i in range(len(path_nodes) - 1):
             curr_n = path_nodes[i]
             next_n = path_nodes[i+1]
             curr_info = self.topology.nodes.get(curr_n, {})
             next_info = self.topology.nodes.get(next_n, {})
+
+            if i > 0 and curr_info.get("type") == "router":
+                remaining_ttl -= 1
+                if remaining_ttl == 0:
+                    metrics.update(status="DROPPED_TTL_EXPIRED", ttl=0, throughput=0.0, retransmissions=0)
+                    trajectory.append({"step_index": step_idx, "phase": "TTL_EXPIRED", "current_node": curr_n,
+                                       "layer": "Network (L3)", "action": "TTL expired; packet discarded",
+                                       "visual": "TTL = 0", "status": "dropped", "description": "Router cannot forward a packet with TTL 0."})
+                    break
 
             # Check if drop occurs at this middle link
             if simulate_drop and i == drop_hop_index:
@@ -163,7 +173,7 @@ class PacketEngine:
                 step_idx += 1
 
                 # If TCP, initiate Retransmission
-                if protocol == "TCP":
+                if protocol == "TCP" and metrics["status"] != "DROPPED":
                     trajectory.append({
                         "step_index": step_idx,
                         "phase": "RETRANSMISSION",
@@ -178,6 +188,8 @@ class PacketEngine:
                     step_idx += 1
                     # Resend successfully on retry
                     simulate_drop = False # delivered on 2nd attempt
+                else:
+                    break
 
             trajectory.append({
                 "step_index": step_idx,
@@ -191,9 +203,13 @@ class PacketEngine:
                 "description": f"Layer 2 frame traversing link. Next-hop MAC updated. Hop Latency: ~{metrics['latency'] / hops:.1f}ms."
             })
             step_idx += 1
+            traversed_path.append(next_n)
+
+        metrics["ttl"] = remaining_ttl
+        metrics["hops"] = len(traversed_path) - 1
 
         # Phase C: Destination Host Decapsulation (Physical -> Application)
-        for dec_step in encapsulation_data["decapsulation_steps"]:
+        for dec_step in encapsulation_data["decapsulation_steps"] if metrics["status"].startswith("DELIVERED") else []:
             trajectory.append({
                 "step_index": step_idx,
                 "phase": "DECAPSULATION",
@@ -211,12 +227,9 @@ class PacketEngine:
             "success": True,
             "packet_data": packet_data,
             "routing": routing_result,
+            "traversed_path": traversed_path,
             "encapsulation": encapsulation_data,
             "metrics": metrics,
             "trajectory": trajectory,
             "total_steps": len(trajectory)
         }
-
-def random_boolean(prob: float = 0.5) -> bool:
-    import random
-    return random.random() < prob

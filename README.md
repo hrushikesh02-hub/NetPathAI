@@ -1,170 +1,100 @@
-# NetPath AI: AI-Based Packet Journey Visualizer for Intelligent Network Analysis
+# NetPath AI
 
-[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://python.org)
-[![Flask](https://img.shields.io/badge/Flask-3.0%2B-green.svg)](https://flask.palletsprojects.com/)
-[![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-1.4%2B-orange.svg)](https://scikit-learn.org/)
-[![React](https://img.shields.io/badge/React-19.0-cyan.svg)](https://react.dev/)
-[![Vite](https://img.shields.io/badge/Vite-6.0-purple.svg)](https://vitejs.dev/)
-[![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4-38bdf8.svg)](https://tailwindcss.com/)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+An educational packet-journey simulator built with Flask, React, SQLite and scikit-learn. It models routing, loss, delay, TTL expiry and TCP recovery. It does not capture live network traffic or configure real hardware.
 
----
+The project scope is a **dataset-based educational application**. Live network integration is not a completion requirement. The UI has three pages: Dashboard, Simulator and History. All seven presets are available from the Scenario Preset control on the existing Simulator page.
 
-## 1. Executive Summary & Purpose
+## What the AI does
 
-**NetPath AI** is an educational and interactive Computer Networks simulation platform engineered to bridge the conceptual gap between theoretical networking models (OSI 7-Layer and TCP/IP 4-Layer architectures) and real-world telemetry analysis. 
+- Isolation Forest detects unusual combinations of eight telemetry features.
+- Random Forest classifies synthetic telemetry as HEALTHY, WARNING or CRITICAL.
+- Explicit metric rules produce the explanations and recommendations. Rules can raise the model's health severity when measured inputs exceed configured thresholds or a simulated packet is dropped.
+- Models are trained on 4,000 generated samples, with 800 held out. Reported accuracy applies only to that synthetic distribution. It is not a validation against real network incidents.
+- `confidence` is null because no calibrated confidence probability is available. `health_confidence` is the raw, uncalibrated Random Forest class score for `model_health_status`, which may differ from the final rule-adjusted health. The UI labels this as a model class score.
+- Missing/incompatible models use clearly labeled rules. No percentage is invented for fallback results. No diagnosis can establish damaged cables, overloaded routers or a nonoptimal route from these metrics alone.
 
-The application visually animates how network packets travel from source hosts through switches, access points, and multi-router mesh topologies to destination servers. Additionally, it integrates a Machine Learning Telemetry Engine (**Isolation Forest** for unsupervised anomaly detection and **Random Forest** for network health classification) to evaluate Quality of Service (QoS) metrics and synthesize actionable engineering diagnoses in natural language.
+Feature order: `packet_size`, `latency`, `packet_loss`, `throughput`, `retransmissions`, `hops`, `ttl`, `jitter`. Manual `/api/ai/analyze` requests must supply all eight finite, valid values.
 
-> [!NOTE]
-> **Academic Simulation Disclaimer:**
-> NetPath AI is a software-based educational simulator designed for conceptual visualization, algorithm study, and interactive pedagogy. It does not replace low-level kernel packet filtering (eBPF/DPDK) or live physical routing hardware configurations.
+## Simulation behavior
 
----
+The graph has bidirectional links and uses Dijkstra over configured link **costs**. Path latency is the sum of link delays; the slowest link constrains bandwidth. Delay, throughput and retransmission counts are educational estimates, not a packet-level TCP implementation or measured QoS.
 
-## 2. Architecture & Algorithmic Explanations
+`hops` counts traversed graph links. TTL decreases only at intermediate forwarding routers. Expired TTL and unrecovered loss stop the journey before destination decapsulation. `routing.path` is the planned route; `traversed_path` is the path actually reached. TCP recovery is represented by an aggregate retry event; it does not replay every link for every retry.
 
-### 2.1 Network Topology & Dijkstra Shortest Path
-The network is modeled as a weighted directed graph $G = (V, E)$ where vertices $V$ represent network nodes (PCs, Switches, Routers, Servers) and edges $E$ represent physical or wireless links weighted by base transmission latency $w(u, v)$.
+Source/destination IPs must match devices in the topology. Presets start from an independent topology. Manual device toggles affect later manual runs in the current backend process. Presets do not change those manual controls.
 
-$$\text{cost}(u, v) = \text{latency}(u, v) + \text{congestion\_penalty}(u, v)$$
+Protocol headers and bitstreams are illustrations. CRC32 samples are explicitly labeled; they are **not** real IPv4/TCP/UDP checksums or full-frame Ethernet FCS. ICMP has protocol number 1 and no transport ports. The configurable packet size is a telemetry parameter rather than a serialized wire-packet length.
 
-Upon any node or link state change (e.g., Core Router R2 failure), the simulation engine dynamically executes Dijkstra's algorithm to recalculate the optimal least-cost path:
+## Run locally
 
-```python
-# Priority queue based edge relaxation
-if dist[u] + weight(u, v) < dist[v]:
-    dist[v] = dist[u] + weight(u, v)
-    parent[v] = u
-```
+Python 3.10+ and Node.js 18+ are required. The saved models use the scikit-learn version pinned in `backend/requirements.txt`.
 
-### 2.2 Protocol Data Unit (PDU) Encapsulation & Decapsulation
-At each hop in the network trajectory, the packet undergoes rigorous protocol transformations:
-1. **Application Layer (Layer 7):** Generates application data payload (HTTP GET, DNS query, etc.).
-2. **Transport Layer (Layer 4):** Adds Source/Destination ports, Sequence/Ack numbers, and calculates TCP/UDP pseudo-header checksum.
-3. **Network Layer (Layer 3):** Encapsulates into an IPv4 datagram with TTL, Source IP, and Destination IP; decrements TTL at every intermediate routing hop and recalculates the IPv4 One's Complement Header Checksum.
-4. **Data Link Layer (Layer 2):** Encapsulates into an Ethernet Frame with Source MAC, Next-Hop Destination MAC, and computes the 32-bit CRC Frame Check Sequence (FCS).
-5. **Physical Layer (Layer 1):** Converts the binary frame into hexadecimal and digital bitstream signals.
-
-### 2.3 Artificial Intelligence & Machine Learning Architecture
-The AI engine evaluates network telemetry features across an 8-dimensional space:
-$$\vec{x} = [\text{Latency}, \text{Packet Loss}, \text{Throughput}, \text{Retransmissions}, \text{Packet Size}, \text{TTL}, \text{Hops}, \text{Jitter}]$$
-
-- **Isolation Forest (Unsupervised Anomaly Detection):** Identifies outlier telemetry patterns by recursively partitioning feature dimensions using random decision trees. Normal instances require many splits; anomalies isolate near the root with short average path lengths $h(x)$.
-- **Random Forest Classifier (Network State Classifier):** Evaluates multi-tree ensemble consensus to classify current network state into `HEALTHY`, `WARNING`, or `CRITICAL`.
-- **Heuristic Diagnostic Rule Engine:** Synthesizes actionable root-cause diagnoses and engineering recommendations (e.g., recommending BBR congestion control, MTU adjustments, or queue buffer tuning).
-
----
-
-## 3. Repository Structure
-
-```
-NetPathAI/
-├── backend/
-│   ├── ai/
-│   │   ├── analyzer.py            # ML inference & heuristic fallback engine
-│   │   ├── dataset.py             # Synthetic telemetry generator (5,000 samples)
-│   │   └── train_model.py         # Isolation Forest & Random Forest training pipeline
-│   ├── database/
-│   │   └── db.py                  # SQLite schema, persistence, and audit logging
-│   ├── models/
-│   │   ├── isolation_forest.joblib# Persisted Scikit-learn anomaly model
-│   │   ├── random_forest.joblib   # Persisted Scikit-learn classifier model
-│   │   └── scaler.joblib          # Standard feature scaler
-│   ├── routes/
-│   │   └── api_routes.py          # Flask REST API endpoints
-│   ├── simulation/
-│   │   ├── encapsulation.py       # 7-layer OSI & TCP/IP header generator
-│   │   ├── metrics.py             # QoS telemetry physics & loss calculations
-│   │   ├── packet_engine.py       # Journey orchestration & trajectory tracking
-│   │   ├── scenarios.py           # 7 pre-configured educational scenarios
-│   │   └── topology.py            # Graph data structure & Dijkstra algorithm
-│   ├── tests/
-│   │   └── test_netpath.py        # 14 Pytest unit and integration test suites
-│   ├── app.py                     # Flask application entry point
-│   └── requirements.txt           # Python dependency specifications
-├── frontend/
-│   ├── public/                    # Static assets & icons
-│   ├── src/
-│   │   ├── components/            # Reusable UI components
-│   │   │   ├── AIExplanationCard.jsx
-│   │   │   ├── LayerStackVisualizer.jsx
-│   │   │   ├── MetricCard.jsx
-│   │   │   ├── Navbar.jsx
-│   │   │   ├── PacketHeaderViewer.jsx
-│   │   │   ├── PathTimeline.jsx
-│   │   │   └── TopologyCanvas.jsx
-│   │   ├── pages/                 # 10 Application views
-│   │   │   ├── AboutDocs.jsx
-│   │   │   ├── AIAnalyzer.jsx
-│   │   │   ├── Dashboard.jsx
-│   │   │   ├── HistoryReports.jsx
-│   │   │   ├── LayerVisualizer.jsx
-│   │   │   ├── NetworkMetrics.jsx
-│   │   │   ├── NetworkTopology.jsx
-│   │   │   ├── PacketDetails.jsx
-│   │   │   ├── PacketSimulator.jsx
-│   │   │   └── SimulationScenarios.jsx
-│   │   ├── services/
-│   │   │   └── api.js             # REST API client
-│   │   ├── utils/
-│   │   │   └── constants.js       # Protocols & Syllabus constants
-│   │   ├── App.jsx                # Application root with React Router
-│   │   ├── index.css              # Custom Tailwind & Glassmorphism styles
-│   │   └── main.jsx               # React DOM entry point
-│   ├── package.json               # Frontend dependencies & scripts
-│   ├── tailwind.config.js         # Tailwind theme configuration
-│   └── vite.config.js             # Vite configuration with /api proxy
-└── README.md                      # Comprehensive project documentation
-```
-
----
-
-## 4. Quickstart & Installation Guide
-
-### Prerequisites
-- **Python 3.10+** (with `pip`)
-- **Node.js 18+** (with `npm`)
-
-### Step 1: Clone & Setup Backend
-```bash
-# Navigate to backend directory
+```powershell
 cd backend
-
-# Create and activate Python virtual environment
 python -m venv venv
-
-# Windows PowerShell:
 .\venv\Scripts\Activate.ps1
-# Linux/macOS:
-source venv/bin/activate
-
-# Install Python dependencies
 pip install -r requirements.txt
-
-# Run automated tests
-pytest
-
-# Start the Flask REST server (runs on http://127.0.0.1:5000)
 python app.py
 ```
 
-### Step 2: Setup & Launch Frontend
-Open a new terminal window:
-```bash
-# Navigate to frontend directory
+In another terminal:
+
+```powershell
 cd frontend
-
-# Install dependencies
-npm install
-
-# Start Vite development server (runs on http://localhost:3000)
+npm ci
 npm run dev
 ```
 
-Open `http://localhost:3000` in your web browser to explore NetPath AI.
+Open http://localhost:3000. The backend defaults to 127.0.0.1:5000 and debug mode is off.
 
----
+Environment options:
 
-## 5. Authors
+- `PORT`, `HOST`: backend binding; default `5000`, `127.0.0.1`.
+- `FLASK_DEBUG=1`: enable local development debugging deliberately.
+- `NETPATH_DB_FILE`: alternate SQLite database path, useful for isolated tests.
+- `NETPATH_ALLOWED_ORIGINS`: comma-separated browser origins. Defaults to localhost/127.0.0.1 on ports 3000 and 4173. Configure the actual frontend origin when deployed separately.
+- `VITE_API_URL`: frontend API base including `/api`; defaults to the Vite `/api` proxy.
+
+This is a local, single-process educational application. It has no user authentication or per-user history/topology isolation. Do not expose its history mutation APIs as a public multi-user service without adding authentication and shared state. CORS/origin checks are not authentication. Multiple backend workers currently have separate manual topology state.
+
+## Verify and train
+
+```powershell
+cd backend
+python -m pytest tests -q
+python -m ai.train_model
+python -m ai.evaluate
+```
+
+Training regenerates all three model artifacts and records the runtime version, confusion matrix and classification reports in `models/training_metrics.json`. Evaluation runs each of the seven presets 30 times with a fixed seed and writes `models/scenario_evaluation.json`. These are simulator checks, not independent real-world validation.
+
+Training also saves the exact dataset split in `backend/models/dataset/`:
+
+- `train.csv`: 3,200 samples used by the health classifier. The anomaly detector trains on the normal subset of these rows.
+- `test.csv`: 800 held-out samples, never used to fit either model or the scaler.
+- `test_predictions.csv`: expected labels, raw model predictions and scores for each test sample.
+
+Stable sample IDs connect predictions to input rows. The metadata records the seed and CSV checksums, and the regression suite verifies that the splits do not overlap and the saved predictions match model inference. Recommendations explain metric thresholds and suggest comparisons within the simulator.
+
+For a project demonstration: run Normal Baseline, compare High Latency and Packet Loss, run Router Failure to show the alternate path, then open History. Use the saved test predictions and confusion matrix to explain model accuracy and false positives. No extra service or external AI API is required.
+
+```powershell
+cd frontend
+npm test
+npm run build
+npm audit
+```
+
+## Project layout
+
+- `backend/ai`: synthetic generator, training, inference and repeatable evaluation.
+- `backend/simulation`: graph, packet journeys, illustrative encapsulation, metrics and seven presets.
+- `backend/routes`: API endpoints and request handling.
+- `backend/database`: SQLite history and summary aggregation.
+- `backend/tests`: isolated API, AI, simulation and persistence regression tests.
+- `frontend/src/pages`: Dashboard, PacketSimulator and HistoryReports.
+- `frontend/src/components`: navigation, topology map and AI explanation card.
+- `frontend/tests`: API-client error-handling tests.
+- `AUDIT.md`: audit findings, verification evidence and remaining limitations.
+
 Developed by Hrushikesh Thombare and Gayatri Rajput.

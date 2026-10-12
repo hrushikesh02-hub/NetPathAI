@@ -18,6 +18,9 @@ export default function PacketSimulator() {
   const [destId, setDestId] = useState('');
   const [protocol, setProtocol] = useState('TCP');
   const [packetSize, setPacketSize] = useState(1500);
+  const [scenarios, setScenarios] = useState([]);
+  const [scenarioId, setScenarioId] = useState('NORMAL');
+  const [scenarioError, setScenarioError] = useState(null);
 
   const [simState, setSimState] = useState({
     status: 'IDLE', // IDLE, RUNNING, DONE, ERROR
@@ -34,10 +37,21 @@ export default function PacketSimulator() {
   const location = useLocation();
   const navigate = useNavigate();
   const simIntervalRef = useRef(null);
+  const runVersion = useRef(0);
 
   useEffect(() => {
     fetchTopology();
-    return () => clearInterval(simIntervalRef.current);
+    return () => { clearInterval(simIntervalRef.current); runVersion.current++; };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    api.getScenarios().then(data => {
+      if (active) setScenarios(data);
+    }).catch(error => {
+      if (active) setScenarioError(error.message);
+    });
+    return () => { active = false; };
   }, []);
 
   useEffect(() => {
@@ -51,6 +65,8 @@ export default function PacketSimulator() {
   }, [location.search, topology.nodes.length, navigate, location.pathname]);
 
   const handleRunScenario = async (scenarioId) => {
+    setScenarioId(scenarioId);
+    const version = ++runVersion.current;
     clearInterval(simIntervalRef.current);
     setSimState({
       status: 'RUNNING',
@@ -66,23 +82,21 @@ export default function PacketSimulator() {
 
     try {
       const result = await api.runScenario(scenarioId);
-      
+      if (version !== runVersion.current) return;
       const sim = result.simulation;
       const scenario = result.scenario;
 
       if (scenario && scenario.params) {
-        setSourceId(scenario.params.source_node || 'PC1');
-        setDestId(scenario.params.destination_node || 'Server1');
+        setSourceId(sim.packet_data.source_node);
+        setDestId(sim.packet_data.destination_node);
         setProtocol(scenario.params.protocol || 'TCP');
+        setPacketSize(scenario.params.packet_size);
       }
 
-      if (scenario && scenario.flags && scenario.flags.disable_router) {
-        setDisabledNodes([scenario.flags.disable_router]);
-      } else {
-        setDisabledNodes([]);
-      }
+      setTopology(result.topology);
+      setDisabledNodes(result.topology.disabled_nodes);
 
-      const pathNodes = sim?.routing?.path || [];
+      const pathNodes = sim?.traversed_path || sim?.routing?.path || [];
 
       if (pathNodes.length === 0) {
         setSimState(prev => ({
@@ -98,7 +112,8 @@ export default function PacketSimulator() {
       let hopIndex = 0;
       setSimState(prev => ({ ...prev, currentHop: pathNodes[0] }));
       
-      simIntervalRef.current = setInterval(async () => {
+      simIntervalRef.current = setInterval(() => {
+        if (version !== runVersion.current) return;
         hopIndex++;
         if (hopIndex >= pathNodes.length) {
           clearInterval(simIntervalRef.current);
@@ -106,8 +121,8 @@ export default function PacketSimulator() {
             ...prev,
             status: 'DONE',
             currentHop: null,
-            latency: sim?.metrics?.latency_ms || sim?.metrics?.latency,
-            packetLoss: sim?.metrics?.packet_loss_percent || sim?.metrics?.packet_loss,
+            latency: sim?.metrics?.latency,
+            packetLoss: sim?.metrics?.packet_loss,
             metrics: sim?.metrics,
             aiAnalysis: result.ai_analysis
           }));
@@ -120,6 +135,7 @@ export default function PacketSimulator() {
       }, 800);
 
     } catch (err) {
+      if (version !== runVersion.current) return;
       clearInterval(simIntervalRef.current);
       setSimState(prev => ({
         ...prev,
@@ -142,20 +158,17 @@ export default function PacketSimulator() {
         setDestId(topo.nodes[topo.nodes.length - 1].id);
       }
     } catch (err) {
-      console.error(err);
+      setSimState(prev => ({ ...prev, status: 'ERROR', error: err.message }));
     }
   };
 
   const handleToggleNode = async (nodeId, currentlyDisabled) => {
     try {
-      await api.toggleNodeFailure(nodeId, currentlyDisabled);
-      if (currentlyDisabled) {
-        setDisabledNodes(prev => prev.filter(id => id !== nodeId));
-      } else {
-        setDisabledNodes(prev => [...prev, nodeId]);
-      }
+      const result = await api.toggleNodeFailure(nodeId, currentlyDisabled);
+      setTopology(result.topology);
+      setDisabledNodes(result.topology.disabled_nodes);
     } catch (err) {
-      console.error(err);
+      setSimState(prev => ({ ...prev, status: 'ERROR', error: err.message }));
     }
   };
 
@@ -164,9 +177,11 @@ export default function PacketSimulator() {
       for (const nodeId of disabledNodes) {
         await api.toggleNodeFailure(nodeId, true);
       }
-      setDisabledNodes([]);
+      const data = await api.getTopology();
+      setTopology(data.topology);
+      setDisabledNodes(data.topology.disabled_nodes);
     } catch (err) {
-      console.error(err);
+      setSimState(prev => ({ ...prev, status: 'ERROR', error: err.message }));
     }
   };
 
@@ -176,6 +191,7 @@ export default function PacketSimulator() {
       return;
     }
 
+    const version = ++runVersion.current;
     clearInterval(simIntervalRef.current);
     setSimState({
       status: 'RUNNING',
@@ -190,23 +206,30 @@ export default function PacketSimulator() {
     });
 
     try {
+      const source = topology.nodes.find(node => node.id === sourceId);
+      const destination = topology.nodes.find(node => node.id === destId);
+      if (!source || !destination) throw new Error('Select valid source and destination nodes.');
+      const currentTopology = await api.getTopology();
+      if (version !== runVersion.current) return;
+      setTopology(currentTopology.topology);
+      setDisabledNodes(currentTopology.topology.disabled_nodes);
       const result = await api.simulateJourney({
         source_node: sourceId,
         destination_node: destId,
-        source_ip: '192.168.1.10',
-        destination_ip: '192.168.2.20',
+        source_ip: source.ip,
+        destination_ip: destination.ip,
         source_port: 5000,
         destination_port: 80,
         protocol: protocol,
         app_protocol: 'HTTP',
         payload: 'Simulation Payload',
         ttl: 64,
-        packet_size: parseInt(packetSize),
-        disabled_nodes: disabledNodes
+        packet_size: Number(packetSize)
       });
 
+      if (version !== runVersion.current) return;
       const sim = result.simulation;
-      const pathNodes = sim?.routing?.path || [];
+      const pathNodes = sim?.traversed_path || sim?.routing?.path || [];
 
       if (pathNodes.length === 0) {
         setSimState(prev => ({
@@ -220,7 +243,8 @@ export default function PacketSimulator() {
       setSimState(prev => ({ ...prev, path: pathNodes, packetId: sim?.packet_id }));
 
       let hopIndex = 0;
-      simIntervalRef.current = setInterval(async () => {
+      simIntervalRef.current = setInterval(() => {
+        if (version !== runVersion.current) return;
         hopIndex++;
         if (hopIndex >= pathNodes.length) {
           clearInterval(simIntervalRef.current);
@@ -228,8 +252,8 @@ export default function PacketSimulator() {
             ...prev,
             status: 'DONE',
             currentHop: null,
-            latency: sim?.metrics?.latency_ms || sim?.metrics?.latency,
-            packetLoss: sim?.metrics?.packet_loss_percent || sim?.metrics?.packet_loss,
+            latency: sim?.metrics?.latency,
+            packetLoss: sim?.metrics?.packet_loss,
             metrics: sim?.metrics,
             aiAnalysis: result.ai_analysis
           }));
@@ -242,6 +266,7 @@ export default function PacketSimulator() {
       }, 800);
 
     } catch (err) {
+      if (version !== runVersion.current) return;
       clearInterval(simIntervalRef.current);
       setSimState(prev => ({
         ...prev,
@@ -256,7 +281,7 @@ export default function PacketSimulator() {
       
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Live Network Simulator</h1>
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Network Simulator</h1>
         <p className="text-sm text-slate-500 mt-1">Test network paths, simulate failures, and get AI diagnostics.</p>
       </div>
 
@@ -264,6 +289,21 @@ export default function PacketSimulator() {
         
         {/* Left Column: Configuration */}
         <div className="lg:col-span-1 space-y-6">
+          <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-3">
+            <label htmlFor="scenario-preset" className="block text-sm font-bold text-slate-900">Scenario Preset</label>
+            {scenarioError && <p role="alert" className="text-xs text-red-700">Presets unavailable: {scenarioError}</p>}
+            <select id="scenario-preset" value={scenarioId} onChange={event => setScenarioId(event.target.value)}
+              disabled={simState.status === 'RUNNING' || !scenarios.length}
+              className="w-full bg-slate-50 border border-slate-200 rounded-md p-2 text-sm">
+              {scenarios.map(scenario => <option key={scenario.id} value={scenario.id}>{scenario.title}</option>)}
+            </select>
+            <p className="text-xs text-slate-500">{scenarios.find(scenario => scenario.id === scenarioId)?.description}</p>
+            <button onClick={() => handleRunScenario(scenarioId)}
+              disabled={simState.status === 'RUNNING' || !scenarios.some(scenario => scenario.id === scenarioId)}
+              className="w-full py-2 rounded-md bg-blue-600 text-white text-sm font-semibold disabled:opacity-50">
+              Run Preset
+            </button>
+          </div>
           <div className="bg-white rounded-xl border border-slate-200 hover:border-blue-300 hover:shadow-md transition-all duration-300 p-5 shadow-sm space-y-4">
             <h3 className="text-sm font-bold text-slate-900 flex items-center space-x-2">
               <Network className="w-4 h-4 text-blue-500" />
@@ -272,33 +312,33 @@ export default function PacketSimulator() {
 
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-semibold text-slate-500 mb-1">Source Node</label>
+                <label htmlFor="source-node" className="block text-xs font-semibold text-slate-500 mb-1">Source Node</label>
                 <select 
                   className="w-full bg-slate-50 border border-slate-200 rounded-md py-2 px-3 text-sm text-slate-700 outline-none focus:border-blue-500"
-                  value={sourceId} onChange={e => setSourceId(e.target.value)}
-                  disabled={simState.status === 'RUNNING'}
+                  id="source-node" value={sourceId} onChange={e => setSourceId(e.target.value)}
+                  disabled={simState.status === 'RUNNING' || !topology.nodes.length}
                 >
                   {topology.nodes.map(n => <option key={n.id} value={n.id}>{n.id} ({n.type})</option>)}
                 </select>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-500 mb-1">Destination Node</label>
+                <label htmlFor="destination-node" className="block text-xs font-semibold text-slate-500 mb-1">Destination Node</label>
                 <select 
                   className="w-full bg-slate-50 border border-slate-200 rounded-md py-2 px-3 text-sm text-slate-700 outline-none focus:border-blue-500"
-                  value={destId} onChange={e => setDestId(e.target.value)}
-                  disabled={simState.status === 'RUNNING'}
+                  id="destination-node" value={destId} onChange={e => setDestId(e.target.value)}
+                  disabled={simState.status === 'RUNNING' || !topology.nodes.length}
                 >
                   {topology.nodes.map(n => <option key={n.id} value={n.id}>{n.id} ({n.type})</option>)}
                 </select>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-500 mb-1">Protocol</label>
+                <label htmlFor="protocol" className="block text-xs font-semibold text-slate-500 mb-1">Protocol</label>
                 <select 
                   className="w-full bg-slate-50 border border-slate-200 rounded-md py-2 px-3 text-sm text-slate-700 outline-none focus:border-blue-500"
-                  value={protocol} onChange={e => setProtocol(e.target.value)}
-                  disabled={simState.status === 'RUNNING'}
+                  id="protocol" value={protocol} onChange={e => setProtocol(e.target.value)}
+                  disabled={simState.status === 'RUNNING' || !topology.nodes.length}
                 >
                   <option value="TCP">TCP (Reliable)</option>
                   <option value="UDP">UDP (Fast)</option>
@@ -307,20 +347,20 @@ export default function PacketSimulator() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-500 mb-1">Packet Size (Bytes)</label>
+                <label htmlFor="packet-size" className="block text-xs font-semibold text-slate-500 mb-1">Packet Size (Bytes)</label>
                 <input 
                   type="number"
                   className="w-full bg-slate-50 border border-slate-200 rounded-md py-2 px-3 text-sm text-slate-700 outline-none focus:border-blue-500"
-                  value={packetSize} onChange={e => setPacketSize(e.target.value)}
+                  id="packet-size" value={packetSize} onChange={e => setPacketSize(e.target.value)}
                   min="64" max="9000"
-                  disabled={simState.status === 'RUNNING'}
+                  disabled={simState.status === 'RUNNING' || !topology.nodes.length}
                 />
               </div>
             </div>
 
             <button
               onClick={handleRunSimulation}
-              disabled={simState.status === 'RUNNING'}
+              disabled={simState.status === 'RUNNING' || !topology.nodes.length}
               className="w-full mt-4 flex items-center justify-center space-x-2 py-2.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition-colors disabled:opacity-50 shadow-sm"
             >
               {simState.status === 'RUNNING' ? (
@@ -347,6 +387,7 @@ export default function PacketSimulator() {
             </p>
             {disabledNodes.length > 0 && (
               <button 
+                disabled={simState.status === 'RUNNING'}
                 onClick={handleRestoreAll}
                 className="w-full flex items-center justify-center space-x-2 py-2 rounded-md bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-medium"
               >
@@ -395,21 +436,21 @@ export default function PacketSimulator() {
                 <div>
                    <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Delivery Metrics</h4>
                    <div className="flex items-center justify-between">
-                     <span className="text-sm text-slate-600">End-to-End Latency</span>
+                     <span className="text-sm text-slate-600">Estimated Path Latency</span>
                      <span className="text-lg font-bold text-slate-900">{simState.latency > 0 ? simState.latency : '--'} ms</span>
                    </div>
                    <div className="flex items-center justify-between mt-3">
                      <span className="text-sm text-slate-600">Packet Loss Rate</span>
                      <span className={`text-lg font-bold ${simState.packetLoss > 0 ? 'text-red-500' : 'text-emerald-500'}`}>
-                       {simState.packetLoss > 0 ? simState.packetLoss : '--'} %
+                       {simState.status === 'DONE' ? simState.packetLoss : '--'} %
                      </span>
                    </div>
                 </div>
 
-                {simState.status === 'DONE' && simState.packetLoss === 0 && (
-                  <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
-                    <p className="text-sm text-emerald-700 font-medium text-center">
-                      Packet delivered successfully across {simState.path.length - 1} hops.
+                {simState.status === 'DONE' && (
+                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                    <p className="text-sm text-slate-700 font-medium text-center">
+                      {simState.metrics?.status?.startsWith('DELIVERED') ? `Packet delivered across ${simState.metrics.hops} links.` : `Packet dropped after ${simState.metrics?.hops} links (${simState.metrics?.status}).`}
                     </p>
                   </div>
                 )}

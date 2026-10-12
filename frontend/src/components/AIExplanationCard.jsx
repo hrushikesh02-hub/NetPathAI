@@ -32,7 +32,7 @@ export default function AIExplanationCard({ analysis = null, loading = false }) 
   const isAnomaly = analysis.is_anomaly || analysis.status === 'anomaly';
   const health = analysis.health_status || 'HEALTHY';
   const risk = (analysis.risk_level || 'low').toUpperCase();
-  const confidence = Math.round((analysis.confidence || 0.95) * 100);
+  const confidence = Number.isFinite(analysis.health_confidence) ? `${Math.round(analysis.health_confidence * 100)}%` : 'N/A';
 
   const getRiskColor = (r) => {
     switch (r) {
@@ -75,7 +75,7 @@ export default function AIExplanationCard({ analysis = null, loading = false }) 
           <div>
             <div className="flex items-center space-x-2">
               <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
-                {isAnomaly ? 'Issue Detected' : 'Network is Healthy'}
+                {isAnomaly ? 'Review Suggested' : 'No Warning Detected'}
               </h3>
               <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getRiskColor(risk)}`}>
                 {risk} RISK
@@ -97,14 +97,16 @@ export default function AIExplanationCard({ analysis = null, loading = false }) 
           </div>
 
           <div className="text-right pl-3 border-l border-slate-200">
-            <span className="text-[10px] text-slate-500 uppercase tracking-wider block">Confidence</span>
+            <span className="text-[10px] text-slate-500 uppercase tracking-wider block">Model class score</span>
             <span className="text-sm font-bold text-blue-600 font-mono">
-              {confidence}%
+              {confidence}
             </span>
           </div>
         </div>
       </div>
 
+      <p className="mt-3 text-xs text-slate-500">{analysis.limitations}</p>
+      {analysis.model_health_status && <p className="mt-2 text-xs text-slate-500">Model class: {analysis.model_health_status}. {analysis.rule_override ? 'Metric rules raised the final health severity.' : 'Score applies to this model class only.'}</p>}
       {/* Diagnostics */}
       <div className="mt-4 space-y-3 text-sm">
         

@@ -7,14 +7,16 @@ export default function HistoryReports() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const fetchHistory = async () => {
     setLoading(true);
+    setError(null);
     try {
       const data = await api.getHistory(100);
       setHistoryList(data);
     } catch (err) {
-      console.error(err);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -26,8 +28,10 @@ export default function HistoryReports() {
 
   const handleClearHistory = async () => {
     if (window.confirm('Are you sure you want to clear all history logs?')) {
-      await api.clearHistory();
-      await fetchHistory();
+      try {
+        await api.clearHistory();
+        await fetchHistory();
+      } catch (err) { setError(`Could not clear history: ${err.message}`); }
     }
   };
 
@@ -52,6 +56,7 @@ export default function HistoryReports() {
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 print:p-0 print:m-0">
       
+      {error && <p role="alert" className="text-red-700">{error}</p>}
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 print:hidden">
         <div>
@@ -162,7 +167,7 @@ export default function HistoryReports() {
               ) : (
                 <tr>
                   <td colSpan={8} className="py-8 text-center text-slate-500">
-                    No matching history records found.
+                    {loading ? 'Loading history...' : error ? 'History unavailable.' : 'No matching history records found.'}
                   </td>
                 </tr>
               )}

@@ -17,11 +17,11 @@ class EncapsulationEngine:
     @staticmethod
     def text_to_binary(text: str, max_bits: int = 64) -> str:
         """Converts text payload into a representative binary string."""
-        binary_chunks = [format(ord(char), '08b') for char in text[:8]]
-        bitstream = " ".join(binary_chunks)
-        if len(text) > 8:
-            bitstream += " ... (truncated)"
-        return bitstream
+        raw = text.encode('utf-8')
+        bits = ''.join(format(byte, '08b') for byte in raw)
+        sample = bits[:max_bits]
+        bitstream = ' '.join(sample[i:i+8] for i in range(0, len(sample), 8))
+        return bitstream + (' ... (truncated)' if len(bits) > max_bits else '')
 
     @classmethod
     def generate_layers(cls, packet_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -101,9 +101,9 @@ class EncapsulationEngine:
                     "Destination Port": dst_port,
                     "Sequence Number": 1001 if trans_proto == "TCP" else "N/A",
                     "Acknowledgment Number": 2001 if trans_proto == "TCP" else "N/A",
-                    "Flags": "SYN, ACK, PSH" if trans_proto == "TCP" else "None",
+                    "Flags": "ACK, PSH" if trans_proto == "TCP" else "None",
                     "Window Size": "65535 bytes" if trans_proto == "TCP" else "N/A",
-                    "Checksum": cls.calculate_checksum(f"{src_port}{dst_port}{payload}")
+                    "Illustrative CRC32 (not transport checksum)": cls.calculate_checksum(f"{src_port}{dst_port}{payload}")
                 },
                 "encapsulation_label": f"[{trans_proto} HDR: {src_port} \u2192 {dst_port}] + [DATA]"
             },
@@ -120,11 +120,11 @@ class EncapsulationEngine:
                     "Source IP": src_ip,
                     "Destination IP": dst_ip,
                     "TTL (Time to Live)": ttl,
-                    "Protocol Number": "6 (TCP)" if trans_proto == "TCP" else "17 (UDP)",
-                    "Header Checksum": cls.calculate_checksum(f"{src_ip}{dst_ip}{ttl}"),
+                    "Protocol Number": {"TCP": "6 (TCP)", "UDP": "17 (UDP)", "ICMP": "1 (ICMP)"}[trans_proto],
+                    "Illustrative CRC32 (not IPv4 checksum)": cls.calculate_checksum(f"{src_ip}{dst_ip}{ttl}"),
                     "Total Length": f"{packet_size} Bytes"
                 },
-                "encapsulation_label": f"[IP HDR: {src_ip} \u2192 {dst_ip}] + [TCP HDR] + [DATA]"
+                "encapsulation_label": f"[IP HDR: {src_ip} \u2192 {dst_ip}] + [{trans_proto} HDR] + [DATA]"
             },
             2: {
                 "layer_number": 2,
@@ -138,9 +138,9 @@ class EncapsulationEngine:
                     "Destination MAC": dst_mac,
                     "Source MAC": src_mac,
                     "EtherType": "0x0800 (IPv4)",
-                    "Frame Check Sequence (FCS/CRC)": cls.calculate_checksum(f"{src_mac}{dst_mac}")
+                    "Illustrative CRC32 (not full-frame FCS)": cls.calculate_checksum(f"{src_mac}{dst_mac}")
                 },
-                "encapsulation_label": f"[ETH HDR: {src_mac} \u2192 {dst_mac}] + [IP HDR] + [TCP HDR] + [DATA] + [FCS]"
+                "encapsulation_label": f"[ETH HDR: {src_mac} \u2192 {dst_mac}] + [IP HDR] + [{trans_proto} HDR] + [DATA] + [FCS]"
             },
             1: {
                 "layer_number": 1,
@@ -211,7 +211,7 @@ class EncapsulationEngine:
             {
                 "step": 3,
                 "layer": "Network (L3)",
-                "action": "Verifying Destination IP match & Decrementing TTL, Stripping IPv4 Header",
+                "action": "Verifying Destination IP match, Stripping IPv4 Header",
                 "visual": f"Verified IP {dst_ip} -> Stripping [IPv4 Hdr]"
             },
             {
@@ -228,7 +228,18 @@ class EncapsulationEngine:
             }
         ]
 
+        if trans_proto == "ICMP":
+            osi_layers[4].update(protocol="N/A", pdu_name="N/A", header_data={},
+                                 description="ICMP operates at the Internet layer and has no TCP/UDP ports.",
+                                 encapsulation_label="[No transport header]")
+            osi_layers[3]["header_data"]["ICMP Message"] = "Echo Request (Type 8, Code 0), illustrative"
+            encapsulation_steps = [step for step in encapsulation_steps if step["layer"] != "Transport (L4)"]
+            decapsulation_steps = [step for step in decapsulation_steps if step["layer"] != "Transport (L4)"]
+        for steps in (encapsulation_steps, decapsulation_steps):
+            for index, step in enumerate(steps, 1):
+                step["step"] = index
         return {
+            "representation": "Illustrative protocol fields, not wire-format packets. CRC32 samples are not IPv4/TCP/UDP checksums or full-frame Ethernet FCS.",
             "osi_layers": osi_layers,
             "encapsulation_steps": encapsulation_steps,
             "decapsulation_steps": decapsulation_steps,
