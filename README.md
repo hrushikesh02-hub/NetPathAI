@@ -10,8 +10,8 @@ The project scope is a **dataset-based educational application**. Live network i
 - Random Forest classifies synthetic telemetry as HEALTHY, WARNING or CRITICAL.
 - Explicit metric rules produce the explanations and recommendations. Rules can raise the model's health severity when measured inputs exceed configured thresholds or a simulated packet is dropped.
 - Models are trained on 4,000 generated samples, with 800 held out. Reported accuracy applies only to that synthetic distribution. It is not a validation against real network incidents.
-- `confidence` is null because no calibrated confidence probability is available. `health_confidence` is the raw, uncalibrated Random Forest class score for `model_health_status`, which may differ from the final rule-adjusted health. The UI labels this as a model class score.
-- Missing/incompatible models use clearly labeled rules. No percentage is invented for fallback results. No diagnosis can establish damaged cables, overloaded routers or a nonoptimal route from these metrics alone.
+- `confidence` is null because no calibrated confidence probability is available. `health_confidence` is the raw, uncalibrated Random Forest class score for `model_health_status`, which may differ from the final rule-adjusted health. Technical metadata stays in the API; the UI focuses on health, observations and simple next steps without a score.
+- Missing/incompatible models use rules, labeled as basic network checks in the UI. No percentage is invented for fallback results. No diagnosis can establish damaged cables, overloaded routers or a nonoptimal route from these metrics alone.
 
 Feature order: `packet_size`, `latency`, `packet_loss`, `throughput`, `retransmissions`, `hops`, `ttl`, `jitter`. Manual `/api/ai/analyze` requests must supply all eight finite, valid values.
 

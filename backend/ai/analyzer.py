@@ -57,21 +57,21 @@ class NetworkAIAnalyzer:
             findings.append({"metric": metric, "value": f[metric], "severity": severity,
                              "observation": observation, "recommendation": advice})
         if f["ttl"] == 0:
-            add("ttl", "CRITICAL", "TTL is exhausted (0).", "Check the initial TTL and forwarding path; the packet cannot be forwarded with TTL 0.")
+            add("ttl", "CRITICAL", "The packet has no hops left (TTL is 0).", "Increase the starting TTL so the packet can travel farther. Check the route, then try again.")
         if f["packet_loss"] >= 2:
             add("packet_loss", "CRITICAL" if f["packet_loss"] >= 15 else "WARNING",
-                f"Packet loss is {f['packet_loss']:.1f}%.", "Compare this sample with Normal Baseline. Run Packet Loss & TCP Retransmission to observe how TCP recovers from simulated loss.")
+                f"Packet loss is {f['packet_loss']:.1f}%.", "Check where packets are being lost in the journey. Try TCP to see how it sends lost data again.")
         if f["latency"] >= 150:
             add("latency", "CRITICAL" if f["latency"] >= 350 else "WARNING",
-                f"Latency is {f['latency']:.1f} ms.", "Compare High Latency and Severe Network Congestion with Normal Baseline to distinguish simulated propagation delay from queueing delay.")
+                f"Packets are taking longer to arrive: {f['latency']:.1f} ms.", "Check which links add the most delay. Compare with Normal Baseline to see how much slower this run is.")
         if f["throughput"] < 80:
             add("throughput", "CRITICAL" if f["throughput"] < 20 else "WARNING",
-                f"Throughput is {f['throughput']:.1f} Mbps.", "Compare with Normal Baseline and inspect the selected route's link capacity. Use Weak Link and Congestion presets to explore why simulated throughput falls.")
+                f"Data transfer is slow: {f['throughput']:.1f} Mbps.", "Check the slowest link on the route. Compare with Normal Baseline to see how much data the route can carry.")
         if f["retransmissions"] >= 1:
             add("retransmissions", "CRITICAL" if f["retransmissions"] >= 6 else "WARNING",
-                f"The telemetry reports {f['retransmissions']} TCP retransmission(s).", "Use the Packet Loss and Excessive TCP Retransmission presets to compare retry counts and delivery outcomes.")
+                f"TCP sent data again {f['retransmissions']} time(s).", "Check packet loss and the retry steps in the journey. See whether the packet arrived after these retries.")
         if f["jitter"] >= 20:
-            add("jitter", "WARNING", f"Jitter is {f['jitter']:.1f} ms.", "Repeat the same preset and compare its delay variation with Normal Baseline, then compare Congestion and Weak Link.")
+            add("jitter", "WARNING", f"Packet delay varies by {f['jitter']:.1f} ms (jitter).", "Run the same scenario again and compare the delay. Use Normal Baseline to check whether delivery is more steady.")
         return findings
 
     def analyze_metrics(self, data):
@@ -84,8 +84,8 @@ class NetworkAIAnalyzer:
         findings = self.rule_findings(features)
         if str(data.get("status", "")).startswith("DROPPED"):
             findings.append({"metric": "status", "value": data["status"], "severity": "CRITICAL",
-                             "observation": f"The simulation reports {data['status']} for this packet.",
-                             "recommendation": "Inspect the journey's drop event and fault settings; this packet did not reach its destination."})
+                             "observation": "The packet was dropped before it reached its destination.",
+                             "recommendation": "Find the drop step in the packet journey. Check the route, TTL, and failure settings before trying again."})
         rule_health = max((item["severity"] for item in findings), key=HEALTH_ORDER.get, default="HEALTHY")
         model_health = None
         health_score = anomaly_score = None
@@ -112,11 +112,11 @@ class NetworkAIAnalyzer:
         recommendations = [item["recommendation"] for item in findings]
         if not reasons:
             if is_anomaly:
-                reasons.append("The synthetic-trained model flags an unusual feature combination; no configured metric threshold is exceeded.")
-                recommendations.append("Compare this feature combination with the saved normal dataset samples. An outlier can differ from the training baseline without exceeding a warning threshold.")
+                reasons.append("The traffic pattern looks unusual, even though no single reading is outside its usual range.")
+                recommendations.append("Run the same scenario again. Compare delay, packet loss, and transfer speed with Normal Baseline.")
             else:
-                reasons.append(f"No configured warning thresholds are exceeded: latency {features['latency']:.1f} ms, loss {features['packet_loss']:.1f}%, retransmissions {features['retransmissions']}.")
-                recommendations.append("Use this sample as a baseline, then run a fault preset to compare the metrics and model predictions.")
+                reasons.append(f"No warning signs were found. Delay is {features['latency']:.1f} ms, packet loss is {features['packet_loss']:.1f}%, and TCP retries are {features['retransmissions']}.")
+                recommendations.append("No changes are suggested for this run. Compare it with another scenario to see how the results change.")
         return {
             "status": "anomaly" if is_anomaly else "normal", "is_anomaly": is_anomaly,
             "health_status": health, "risk_level": risk,
@@ -126,12 +126,12 @@ class NetworkAIAnalyzer:
             "anomaly_score": anomaly_score, "rule_health_status": rule_health,
             "rule_override": model_health is not None and HEALTH_ORDER[rule_health] > HEALTH_ORDER[model_health],
             "reason": " ".join(reasons),
-            "possible_cause": "Telemetry alone cannot establish a root cause. In this simulator, scenario settings and the modeled route generate the measurements.",
+            "possible_cause": "These readings alone do not show the exact cause. Check the packet journey and scenario settings for more details.",
             "recommendation": " ".join(recommendations), "evidence": findings,
             "model_source": "Isolation Forest + Random Forest with rule safeguards" if model_health else "Fallback Network Rule Analyzer",
             "explanation_source": "metric_threshold_rules", "training_data_source": "synthetic",
             "limitations": "Dataset-trained classification with metric-based suggestions. Model class scores are uncalibrated; they are not the probability that a suggestion is correct.",
             "is_fallback": model_health is None,
-            "fallback_message": "ML models unavailable or incompatible; metric rules are active." if model_health is None else None,
+            "fallback_message": "AI analysis is unavailable. Basic network checks are shown instead." if model_health is None else None,
             "features_analyzed": features,
         }

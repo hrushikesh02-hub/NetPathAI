@@ -21,9 +21,9 @@ export default function AIExplanationCard({ analysis = null, loading = false }) 
     return (
       <div className="bg-white rounded-xl border border-slate-200 p-6 text-center shadow-sm">
         <Cpu className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-        <h4 className="text-sm font-bold text-slate-700">Analyzer Idle</h4>
+        <h4 className="text-sm font-bold text-slate-700">Ready to Analyze</h4>
         <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
-          Start a simulation to see network diagnostics and AI health analysis.
+          Start a simulation to see the results and suggestions.
         </p>
       </div>
     );
@@ -32,7 +32,6 @@ export default function AIExplanationCard({ analysis = null, loading = false }) 
   const isAnomaly = analysis.is_anomaly || analysis.status === 'anomaly';
   const health = analysis.health_status || 'HEALTHY';
   const risk = (analysis.risk_level || 'low').toUpperCase();
-  const confidence = Number.isFinite(analysis.health_confidence) ? `${Math.round(analysis.health_confidence * 100)}%` : 'N/A';
 
   const getRiskColor = (r) => {
     switch (r) {
@@ -60,7 +59,7 @@ export default function AIExplanationCard({ analysis = null, loading = false }) 
       {analysis.is_fallback && (
         <div className="mb-4 p-2.5 rounded-lg bg-amber-50 border border-amber-200 flex items-center space-x-2 text-xs text-amber-700">
           <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
-          <span>{analysis.fallback_message || 'AI service unavailable — using fallback rules.'}</span>
+          <span>AI analysis is unavailable. Basic network checks are shown instead.</span>
         </div>
       )}
 
@@ -75,14 +74,14 @@ export default function AIExplanationCard({ analysis = null, loading = false }) 
           <div>
             <div className="flex items-center space-x-2">
               <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
-                {isAnomaly ? 'Review Suggested' : 'No Warning Detected'}
+                {isAnomaly ? 'Needs Attention' : 'No Warning Signs'}
               </h3>
               <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getRiskColor(risk)}`}>
                 {risk} RISK
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
-              Engine: <span className="text-slate-700 font-medium">{analysis.model_source || 'Anomaly Detector'}</span>
+              {analysis.is_fallback ? 'Network Check' : 'AI Network Analysis'}
             </p>
           </div>
         </div>
@@ -90,23 +89,15 @@ export default function AIExplanationCard({ analysis = null, loading = false }) 
         {/* Badges */}
         <div className="flex items-center space-x-3 text-xs">
           <div className="text-right">
-            <span className="text-[10px] text-slate-500 uppercase tracking-wider block">Health State</span>
+            <span className="text-[10px] text-slate-500 uppercase tracking-wider block">Network Health</span>
             <span className={`px-2 py-0.5 rounded text-[10px] font-bold border inline-block ${getHealthColor(health)}`}>
               {health}
             </span>
           </div>
 
-          <div className="text-right pl-3 border-l border-slate-200">
-            <span className="text-[10px] text-slate-500 uppercase tracking-wider block">Model class score</span>
-            <span className="text-sm font-bold text-blue-600 font-mono">
-              {confidence}
-            </span>
-          </div>
         </div>
       </div>
 
-      <p className="mt-3 text-xs text-slate-500">{analysis.limitations}</p>
-      {analysis.model_health_status && <p className="mt-2 text-xs text-slate-500">Model class: {analysis.model_health_status}. {analysis.rule_override ? 'Metric rules raised the final health severity.' : 'Score applies to this model class only.'}</p>}
       {/* Diagnostics */}
       <div className="mt-4 space-y-3 text-sm">
         
@@ -114,10 +105,10 @@ export default function AIExplanationCard({ analysis = null, loading = false }) 
         <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
           <div className="flex items-center space-x-1.5 text-slate-700 font-semibold mb-1">
             <AlertTriangle className={`w-4 h-4 ${isAnomaly ? 'text-amber-500' : 'text-emerald-500'}`} />
-            <span>Observation:</span>
+            <span>What we found</span>
           </div>
           <p className="text-slate-600 leading-relaxed pl-5 text-xs">
-            {analysis.reason || 'Traffic looks normal and is within expected bounds.'}
+            {analysis.reason || 'No details are available for this run.'}
           </p>
         </div>
 
@@ -126,7 +117,7 @@ export default function AIExplanationCard({ analysis = null, loading = false }) 
           <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
             <div className="flex items-center space-x-1.5 text-slate-700 font-semibold mb-1">
               <Cpu className="w-4 h-4 text-blue-500" />
-              <span>Possible Cause:</span>
+              <span>What to check</span>
             </div>
             <p className="text-slate-600 leading-relaxed pl-5 text-xs">
               {analysis.possible_cause}
@@ -138,10 +129,10 @@ export default function AIExplanationCard({ analysis = null, loading = false }) 
         <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
           <div className="flex items-center space-x-1.5 text-blue-800 font-semibold mb-1">
             <Wrench className="w-4 h-4 text-blue-600" />
-            <span>Recommendation:</span>
+            <span>What you can do</span>
           </div>
           <p className="text-blue-700 leading-relaxed pl-5 text-xs">
-            {analysis.recommendation || 'No action needed. Everything is operating normally.'}
+            {analysis.recommendation || 'Run the simulation again to get suggestions.'}
           </p>
         </div>
 

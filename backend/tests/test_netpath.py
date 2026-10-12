@@ -87,7 +87,7 @@ def test_fallback_evidence(fallback, changes, health, metric):
 def test_healthy_explanation_does_not_claim_hardware_condition(fallback):
     result = fallback.analyze_metrics(BASE)
     assert result['health_status'] == 'HEALTHY'
-    assert 'cannot establish' in result['possible_cause']
+    assert 'do not show the exact cause' in result['possible_cause']
 
 
 def test_bundled_models_work_and_critical_override():
@@ -252,7 +252,7 @@ def test_null_congestion_is_rejected(client):
 def test_drop_is_explained_even_without_rate_threshold(fallback):
     result = fallback.analyze_metrics({**BASE, 'status': 'DROPPED'})
     assert result['health_status'] == 'CRITICAL'
-    assert 'DROPPED' in result['reason']
+    assert 'dropped before it reached its destination' in result['reason']
 
 
 def test_dataset_size_and_rng_isolation():
