@@ -17,6 +17,7 @@ def create_app():
     
     origins = [origin.strip() for origin in os.environ.get(
         "NETPATH_ALLOWED_ORIGINS",
+        "https://netpathai.vercel.app,"
         "http://localhost:3000,http://127.0.0.1:3000,http://localhost:4173,http://127.0.0.1:4173"
     ).split(",") if origin.strip()]
     CORS(app, resources={r"/api/*": {"origins": origins}})

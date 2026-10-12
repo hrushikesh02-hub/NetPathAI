@@ -52,8 +52,10 @@ Environment options:
 - `PORT`, `HOST`: backend binding; default `5000`, `127.0.0.1`.
 - `FLASK_DEBUG=1`: enable local development debugging deliberately.
 - `NETPATH_DB_FILE`: alternate SQLite database path, useful for isolated tests.
-- `NETPATH_ALLOWED_ORIGINS`: comma-separated browser origins. Defaults to localhost/127.0.0.1 on ports 3000 and 4173. Configure the actual frontend origin when deployed separately.
+- `NETPATH_ALLOWED_ORIGINS`: comma-separated browser origins. Defaults to `https://netpathai.vercel.app` and localhost/127.0.0.1 on ports 3000 and 4173. Setting this variable replaces the defaults; include the actual frontend origin (without a trailing slash).
 - `VITE_API_URL`: frontend API base including `/api`; defaults to the Vite `/api` proxy.
+
+For the existing Vercel/Render deployment, set Vercel's `VITE_API_URL` to `https://netpathai.onrender.com/api`. Run the backend from `backend` with `gunicorn --bind 0.0.0.0:$PORT app:app`. If Render defines `NETPATH_ALLOWED_ORIGINS`, include `https://netpathai.vercel.app` in it. A healthy backend can still appear offline in the browser when its origin allowlist rejects the frontend; `/api/health` must return both HTTP 200 and `Access-Control-Allow-Origin: https://netpathai.vercel.app` for that request origin.
 
 This is a local, single-process educational application. It has no user authentication or per-user history/topology isolation. Do not expose its history mutation APIs as a public multi-user service without adding authentication and shared state. CORS/origin checks are not authentication. Multiple backend workers currently have separate manual topology state.
 

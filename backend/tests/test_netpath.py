@@ -209,6 +209,40 @@ def test_packet_ids_do_not_replace_history(client):
 def test_unknown_browser_origin_cannot_clear_history(client):
     response = client.post('/api/history/clear', headers={'Origin': 'https://untrusted.example'})
     assert response.status_code == 403
+    assert 'Access-Control-Allow-Origin' not in response.headers
+
+
+@pytest.mark.parametrize('origin', ['https://netpathai.vercel.app', 'http://localhost:3000'])
+def test_supported_frontend_can_read_dashboard_and_run_scenario(client, origin):
+    headers = {'Origin': origin}
+    for url in ['/api/health', '/api/metrics']:
+        response = client.get(url, headers=headers)
+        assert response.status_code == 200
+        assert response.headers['Access-Control-Allow-Origin'] == origin
+
+    preflight = client.options('/api/scenario/run', headers={
+        **headers,
+        'Access-Control-Request-Method': 'POST',
+        'Access-Control-Request-Headers': 'content-type',
+    })
+    assert preflight.status_code == 200
+    assert preflight.headers['Access-Control-Allow-Origin'] == origin
+    assert 'POST' in preflight.headers['Access-Control-Allow-Methods']
+    assert 'content-type' in preflight.headers['Access-Control-Allow-Headers'].lower()
+
+    result = client.post('/api/scenario/run', json={'scenario_id': 'NORMAL'}, headers=headers)
+    assert result.status_code == 200
+    assert result.headers['Access-Control-Allow-Origin'] == origin
+
+
+def test_explicit_origin_configuration_overrides_defaults(client, monkeypatch):
+    from app import create_app
+    monkeypatch.setenv('NETPATH_ALLOWED_ORIGINS', ' https://demo.example ')
+    configured = create_app().test_client()
+    allowed = configured.get('/api/health', headers={'Origin': 'https://demo.example'})
+    assert allowed.status_code == 200
+    assert allowed.headers['Access-Control-Allow-Origin'] == 'https://demo.example'
+    assert configured.get('/api/health', headers={'Origin': 'https://netpathai.vercel.app'}).status_code == 403
 
 
 def test_null_congestion_is_rejected(client):
